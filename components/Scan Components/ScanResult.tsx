@@ -1,5 +1,6 @@
 import type { ScanResult as ScanResultData } from "@/types";
 import { getGrade } from "@/lib/grades";
+import ExportPdfButton from "@/components/Scan Components/ExportPdfButton";
 
 export default function ScanResult({ result }: { result: ScanResultData | null }) {
   if (!result) return <p className="w-full px-3 text-sm text-slate-400 sm:px-5">Submit a domain to see its scan report.</p>;
@@ -25,6 +26,9 @@ export default function ScanResult({ result }: { result: ScanResultData | null }
         <div className="flex min-w-0 flex-col justify-between gap-2 px-4 text-start sm:flex-row sm:items-center sm:px-2">
           <p className="break-all font-bold">{result.url}</p>
           <time className="text-xs text-slate-400 sm:text-sm" dateTime={result.scannedAt}>Scanned {new Date(result.scannedAt).toLocaleString()}</time>
+        </div>
+        <div className="mt-3 flex justify-start px-4 sm:justify-end sm:px-2">
+          <ExportPdfButton result={result} />
         </div>
         {result.redirectChain && result.redirectChain.length > 1 && (
           <p className="mt-3 break-all px-4 text-start text-xs leading-relaxed text-slate-400 sm:px-2 sm:text-sm">

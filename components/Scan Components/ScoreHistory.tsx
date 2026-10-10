@@ -73,7 +73,7 @@ export default function ScoreHistory() {
   return (
     <section
       aria-labelledby="score-history-title"
-      className="mx-0 mb-5 mt-5 flex min-h-[440px] min-w-0 flex-col overflow-hidden rounded-2xl border border-violet-500/40 bg-gradient-to-br from-[#10051f] to-[#050818] px-3 pb-4 pt-4 sm:mb-6 sm:mt-6 sm:min-h-[580px] sm:px-6 sm:pb-5 lg:min-h-[700px]"
+      className="mx-0 mb-5 mt-5 flex min-h-110 min-w-0 flex-col overflow-hidden rounded-2xl border border-violet-500/40 bg-linear-to-br from-[#10051f] to-[#050818] px-3 pb-4 pt-4 sm:mb-6 sm:mt-6 sm:min-h-[580px] sm:px-6 sm:pb-5 lg:min-h-[700px]"
     >
       <div className="flex min-w-0 flex-wrap items-center justify-between gap-x-3 gap-y-1">
         <h2 id="score-history-title" className="min-w-0 font-mono text-lg font-bold text-white sm:text-2xl">
@@ -84,11 +84,11 @@ export default function ScoreHistory() {
         </span>
       </div>
 
-      <div className="mt-3 min-h-[350px] w-full min-w-0 flex-1 sm:min-h-[470px] lg:min-h-[580px]">
+      <div className="mt-3 min-h-87.5 w-full min-w-0 flex-1 sm:min-h-117.5 lg:min-h-145">
         <svg
           ref={chartRef}
           aria-label={scans.length ? `Security score history for the last ${scans.length} scans` : "No score history yet"}
-          className="block h-full min-h-[350px] w-full overflow-hidden sm:min-h-[470px] lg:min-h-[580px]"
+          className="block h-full min-h-87.5 w-full overflow-hidden sm:min-h-117.5 lg:min-h-145"
           role="img"
           viewBox={`0 0 ${chartSize.width} ${chartSize.height}`}
           preserveAspectRatio="none"
