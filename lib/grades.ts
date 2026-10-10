@@ -5,7 +5,7 @@ export const grades = [
     label: "Almost Flawless",
     description:
       "Your system is highly secure with minimal vulnerabilities. Keep up the good work!",
-    color: "#cfc508",
+    color: "text-[#cfc508]",
   },
   {
     grade: "A",
@@ -13,7 +13,7 @@ export const grades = [
     label: "Excellent",
     description:
       "Your system is secure with very few vulnerabilities. Great job!",
-    color: "#3FB68B",
+    color: "text-[#3FB68B]",
   },
   {
     grade: "B",
@@ -21,7 +21,7 @@ export const grades = [
     label: "Good",
     description:
       "Your system is relatively secure, but there are some vulnerabilities that need attention.",
-    color: "#FFC107",
+    color: "text-[#FFC107]",
   },
   {
     grade: "C",
@@ -29,7 +29,7 @@ export const grades = [
     label: "Average",
     description:
       "Your system has several vulnerabilities. It's important to address these issues to improve security.",
-    color: "#FF9800",
+    color: "text-[#FF9800]",
   },
   {
     grade: "D",
@@ -37,7 +37,7 @@ export const grades = [
     label: "Poor",
     description:
       "Your system has significant security vulnerabilities. Immediate action is required to address these issues.",
-    color: "#F44336",
+    color: "text-[#F44336]",
   },
   {
     grade: "F",
@@ -45,7 +45,7 @@ export const grades = [
     label: "Failing",
     description:
       "Your system is highly vulnerable and at risk. Immediate action is required to address these issues.",
-    color: "#B71C1C",
+    color: "text-[#B71C1C]",
   },
 ] as const;
 

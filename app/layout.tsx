@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import "./globals.css";
 import Navbar from "../components/Navbar Components/Navbar";
 
@@ -7,7 +8,11 @@ export const metadata: Metadata = {
   description: "A lightweight HTTPS security header scanner.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export const instant = false;
+
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  await connection();
+
   return (
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full flex flex-col bg-slate-950">
