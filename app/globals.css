@@ -1,5 +1,27 @@
 @import "tailwindcss";
 
+@keyframes result-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-result-in {
+  animation: result-in 420ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-result-in {
+    animation: none;
+  }
+}
+
 .scan-fix-scroll {
   scrollbar-color: #8b5cf6 #100b1d;
   scrollbar-width: thin;

@@ -13,7 +13,7 @@ export default function ScanResult({ result }: { result: ScanResultData | null }
   const grade = getGrade(result.score);
 
   return (
-    <section aria-label="Scan summary" className="flex w-full flex-col gap-4 px-5 sm:flex-row">
+    <section aria-label="Scan summary" className="animate-result-in flex w-full flex-col gap-4 px-5 sm:flex-row">
       <div className="flex flex-2 flex-col items-center justify-center rounded-2xl border border-violet-400/20 bg-gradient-to-br from-[#140125] to-slate-950 py-8 text-center shadow-lg shadow-violet-950/30 sm:px-6">
         <span className="font-bold">Security score</span>
         <p className="text-[100px] font-bold leading-tight" style={{ color: grade.color }}>{result.grade}</p>

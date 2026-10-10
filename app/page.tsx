@@ -15,7 +15,7 @@ export default function Home() {
     setResult(nextResult);
     try {
       const previous = JSON.parse(localStorage.getItem(HISTORY_KEY) ?? "[]") as ScanResultData[];
-      localStorage.setItem(HISTORY_KEY, JSON.stringify([nextResult, ...previous.filter((item) => item.id !== nextResult.id)].slice(0, 25)));
+      localStorage.setItem(HISTORY_KEY, JSON.stringify([nextResult, ...previous.filter((item) => item.url !== nextResult.url)].slice(0, 25)));
       window.dispatchEvent(new Event("secscan-history-change"));
     } catch {
     }
@@ -24,8 +24,10 @@ export default function Home() {
   return (
     <div className="mx-auto flex min-h-full w-full max-w-7xl flex-col items-center gap-6 px-4 py-5 text-white sm:px-6 lg:px-8">
       <ScanForm onComplete={saveResult} />
-      <ScanResult result={result} />
-      {result && <ScanFindings findings={result.findings} />}
+      <div key={result?.id ?? "empty"} className="w-full">
+        <ScanResult result={result} />
+        {result && <ScanFindings findings={result.findings} />}
+      </div>
     </div>
   );
 }

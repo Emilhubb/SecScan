@@ -19,9 +19,9 @@ const ScanFindings = ({ findings }: { findings: Finding[] }) => {
     active === "all" ? findings : findings.filter((f) => f.severity === active);
 
   return (
-    <section className="flex flex-col gap-4">
+    <section aria-labelledby="scan-findings-title" className="animate-result-in w-full flex flex-col gap-4 px-5 py-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-2xl font-bold">Findings</h2>
+        <h2 id="scan-findings-title" className="text-2xl font-bold">Findings</h2>
         <div className="flex flex-wrap gap-2">
           {filters.map((f) => (
             <button
@@ -41,13 +41,16 @@ const ScanFindings = ({ findings }: { findings: Finding[] }) => {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {visible.map((finding) => (
-          <FindingCard key={finding.id} finding={finding} />
-        ))}
-      </div>
-      {visible.length === 0 && (
-        <p className="text-sm text-slate-400">No scan findings match this filter.</p>
+      {visible.length > 0 ? (
+        <div className="grid w-full gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {visible.map((finding) => (
+            <FindingCard key={finding.id} finding={finding} />
+          ))}
+        </div>
+      ) : (
+        <p className="w-full py-6 text-center text-sm text-slate-400">
+          No findings match this filter.
+        </p>
       )}
     </section>
   );

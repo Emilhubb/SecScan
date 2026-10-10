@@ -5,9 +5,16 @@ import Link from "next/link";
 import type { ScanResult } from "@/types";
 
 const HISTORY_KEY = "secscan-history";
+const EMPTY_HISTORY: ScanResult[] = [];
+let cachedStorageValue: string | null | undefined;
+let cachedHistory: ScanResult[] = EMPTY_HISTORY;
+
+function getServerHistory(): ScanResult[] {
+  return EMPTY_HISTORY;
+}
 
 export default function HistoryPage() {
-  const history = useSyncExternalStore(subscribe, getHistory, () => []);
+  const history = useSyncExternalStore(subscribe, getHistory, getServerHistory);
 
   function clearHistory() {
     localStorage.removeItem(HISTORY_KEY);
@@ -49,10 +56,25 @@ function subscribe(onChange: () => void) {
 }
 
 function getHistory(): ScanResult[] {
+  const storageValue = localStorage.getItem(HISTORY_KEY);
+  if (storageValue === cachedStorageValue) return cachedHistory;
+
   try {
-    const saved: unknown = JSON.parse(localStorage.getItem(HISTORY_KEY) ?? "[]");
-    return Array.isArray(saved) ? (saved as ScanResult[]) : [];
+    const saved: unknown = JSON.parse(storageValue ?? "[]");
+    if (Array.isArray(saved)) {
+      const seenUrls = new Set<string>();
+      cachedHistory = (saved as ScanResult[]).filter((result) => {
+        if (seenUrls.has(result.url)) return false;
+        seenUrls.add(result.url);
+        return true;
+      });
+    } else {
+      cachedHistory = EMPTY_HISTORY;
+    }
   } catch {
-    return [];
+    cachedHistory = EMPTY_HISTORY;
   }
+
+  cachedStorageValue = storageValue;
+  return cachedHistory;
 }
