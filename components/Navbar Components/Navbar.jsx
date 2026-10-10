@@ -2,7 +2,6 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 
 const links = [
   { label: "Scan", href: "/" },
@@ -23,7 +22,7 @@ const Navbar = () => {
         aria-label="SecScan home"
         className="group inline-flex shrink-0 items-center gap-2 "
       >
-        <Image src="/logo.png" alt="SecScan logo" width={128} height={36} priority className="size-8 object-cover sm:size-9" />
+        <span aria-hidden="true" className="navbar-logo size-8 shrink-0 sm:size-9" />
         <span className="text-xl font-bold tracking-tight text-white sm:text-3xl lg:text-4xl">
           sec<span className="text-violet-400 italic">scan</span>
         </span>

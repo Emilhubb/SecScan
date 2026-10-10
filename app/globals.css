@@ -12,6 +12,13 @@ body {
   font-style: normal;
 }
 
+.navbar-logo {
+  background-image: url("/logo.png");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
 @keyframes result-in {
   from {
     opacity: 0;
