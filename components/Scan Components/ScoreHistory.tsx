@@ -113,11 +113,7 @@ export default function ScoreHistory() {
               <title>{`${scan.score}/100 · ${scan.url}`}</title>
             </circle>
           ))}
-          {scans.length === 0 && (
-            <text x={chartSize.width / 2} y={chartSize.height / 2} textAnchor="middle" fill="#64748b" fontSize="14">
-              Run scans to see your score history
-            </text>
-          )}
+        
           {points.map(({ x, scan }) => (
             <text key={`${scan.id}-website`} x={x} y={chartSize.height - 58} textAnchor="middle" fill="#8b7ba8" fontSize={chartSize.width < 400 ? "9" : "11"} fontFamily="monospace">
               {wrapWebsite(scan.url, chartSize.width < 400 ? 6 : chartSize.width < 640 ? 9 : 16).map((label, index) => (
