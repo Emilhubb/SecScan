@@ -1,5 +1,3 @@
-import { ScanResult } from "@/types";
-
 export const grades = [
   {
     grade: "+A",
@@ -7,7 +5,7 @@ export const grades = [
     label: "Almost Flawless",
     description:
       "Your system is highly secure with minimal vulnerabilities. Keep up the good work!",
-    color: "#aabf32",
+    color: "#cfc508",
   },
   {
     grade: "A",
@@ -41,18 +39,18 @@ export const grades = [
       "Your system has significant security vulnerabilities. Immediate action is required to address these issues.",
     color: "#F44336",
   },
-    {
+  {
     grade: "F",
     minScore: 0,
     label: "Failing",
     description:
       "Your system is highly vulnerable and at risk. Immediate action is required to address these issues.",
     color: "#B71C1C",
-    }
+  },
 ] as const;
 
 export type Grade = (typeof grades)[number]["grade"];
 
 export function getGrade(score: number) {
-    return grades.find((g) => score >= g.minScore) ?? grades[grades.length - 1].grade
+  return grades.find((g) => score >= g.minScore) ?? grades[grades.length - 1];
 }
