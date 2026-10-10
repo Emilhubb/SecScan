@@ -10,6 +10,7 @@ const filters: { key: Severity | "all"; label: string }[] = [
   { key: "medium", label: "Medium" },
   { key: "low", label: "Low" },
   { key: "pass", label: "Pass" },
+  { key: "info", label: "Info" },
 ];
 
 const ScanFindings = ({ findings }: { findings: Finding[] }) => {

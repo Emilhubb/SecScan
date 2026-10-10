@@ -6,6 +6,7 @@ const badge: Record<Severity, string> = {
   medium: "text-[#f0a23a] border-[#f0a23a]",
   low: "text-[#4d9bff] border-[#4d9bff]",
   pass: "text-[#2fb985] border-[#2fb985]",
+  info: "text-slate-300 border-slate-400",
 };
 
 
@@ -20,9 +21,15 @@ const FindingCard = ({ finding }: { finding: Finding }) => {
           {finding.severity}
         </span>
       </div>
-      <p className="text-sm leading-relaxed text-[#8f9bbd]">
-        {finding.description}
-      </p>
+      {finding.description.length > 240 ? (
+        <div className="scan-fix-scroll max-h-40 overflow-y-auto overflow-x-hidden whitespace-pre-wrap break-words rounded-lg border border-[#241442] bg-[#050818] p-3 text-sm leading-relaxed text-[#aeb8d2]">
+          {finding.description}
+        </div>
+      ) : (
+        <p className="text-sm leading-relaxed text-[#8f9bbd]">
+          {finding.description}
+        </p>
+      )}
       {finding.fix && (
         <pre className="scan-fix-scroll max-h-64 overflow-y-auto whitespace-pre-wrap break-words rounded-lg border border-[#241442] bg-[#050818] p-3 text-left font-mono text-[13px] leading-relaxed text-violet-100">
           {finding.fix}

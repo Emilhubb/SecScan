@@ -5,10 +5,11 @@ export default function ScanResult({ result }: { result: ScanResultData | null }
   if (!result) return <p className="w-full px-6 text-sm text-slate-400">Submit a domain to see its scan report.</p>;
 
   const groups = [
-    { label: "High", severity: "high" },
-    { label: "Medium", severity: "medium" },
-    { label: "Low", severity: "low" },
-    { label: "Pass", severity: "pass" },
+    { label: "High", severity: "high", color: "text-[#f0615a]" },
+    { label: "Medium", severity: "medium", color: "text-[#f0a23a]" },
+    { label: "Low", severity: "low", color: "text-[#4d9bff]" },
+    { label: "Pass", severity: "pass", color: "text-[#2fb985]" },
+    { label: "Info", severity: "info", color: "text-slate-300" },
   ] as const;
   const grade = getGrade(result.score);
 
@@ -25,10 +26,15 @@ export default function ScanResult({ result }: { result: ScanResultData | null }
           <p className="break-all font-bold">{result.url}</p>
           <time className="text-sm text-slate-400" dateTime={result.scannedAt}>Scanned {new Date(result.scannedAt).toLocaleString()}</time>
         </div>
-        <div className="mt-8 grid grid-cols-2 gap-3 px-3 sm:grid-cols-4">
-          {groups.map(({ label, severity }) => {
+        {result.redirectChain && result.redirectChain.length > 1 && (
+          <p className="mt-3 break-all px-5 text-start text-sm text-slate-400">
+            Redirect path: {result.redirectChain.join(" → ")}
+          </p>
+        )}
+        <div className="mt-8 grid grid-cols-2 gap-3 px-3 sm:grid-cols-5">
+          {groups.map(({ label, severity, color }) => {
             const count = result.findings.filter((item) => item.severity === severity).length;
-            return <div key={severity} className="rounded-2xl bg-slate-950/70 py-6 shadow-lg shadow-violet-950/30"><p className="text-sm font-bold text-slate-300">{label}</p><p className="mt-3 text-4xl font-bold">{count}</p></div>;
+            return <div key={severity} className="rounded-2xl bg-slate-950/70 py-6 shadow-lg shadow-violet-950/30"><p className={`text-sm font-bold ${color}`}>{label}</p><p className={`mt-3 text-4xl font-bold ${color}`}>{count}</p></div>;
           })}
         </div>
       </div>

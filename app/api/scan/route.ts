@@ -63,6 +63,71 @@ const checks: {
   },
 ];
 
+function analyzeCsp(rawPolicy: string) {
+  const directives = new Map<string, string[]>();
+  for (const part of rawPolicy.toLowerCase().split(";")) {
+    const [name, ...sources] = part.trim().split(/\s+/);
+    if (name) directives.set(name, sources);
+  }
+
+  const scriptDirective = directives.has("script-src-elem")
+    ? "script-src-elem"
+    : directives.has("script-src")
+      ? "script-src"
+      : "default-src";
+  const styleDirective = directives.has("style-src-elem")
+    ? "style-src-elem"
+    : directives.has("style-src")
+      ? "style-src"
+      : "default-src";
+  const scriptSources = directives.get(scriptDirective) ?? [];
+  const styleSources = directives.get(styleDirective) ?? [];
+  const nonceOrHash = (source: string) => /^'(?:nonce-[^']+|sha(?:256|384|512)-[^']+)'$/.test(source);
+  const issues: { message: string; severity: Severity; fix: string }[] = [];
+
+  if (scriptSources.includes("'unsafe-inline'") && !scriptSources.some(nonceOrHash)) {
+    issues.push({
+      message: `'unsafe-inline' is enabled in ${scriptDirective}, allowing inline scripts without a matching nonce or hash.`,
+      severity: "high",
+      fix: "Replace the script policy with a nonce or hash based policy, for example: script-src 'self' 'nonce-{random}' 'strict-dynamic'. Generate a new unpredictable nonce for each response.",
+    });
+  }
+  if (scriptSources.includes("'unsafe-eval'")) {
+    issues.push({
+      message: `'unsafe-eval' is enabled in ${scriptDirective}, allowing string evaluation as script.`,
+      severity: "high",
+      fix: `Remove 'unsafe-eval' from ${scriptDirective}; refactor code that uses eval() or string-based timers.`,
+    });
+  }
+  if (styleSources.includes("'unsafe-inline'")) {
+    issues.push({
+      message: `'unsafe-inline' is enabled in ${styleDirective}; this permits inline styles.`,
+      severity: "low",
+      fix: "If practical, replace inline styles with a nonce based policy, for example: style-src 'self' 'nonce-{random}'. Generate a new unpredictable nonce for each response.",
+    });
+  }
+
+  for (const [name, sources] of directives) {
+    if (sources.some((source) => source === "*" || source === "https:" || source === "http:")) {
+      issues.push({
+        message: `A broad source is allowed by ${name}.`,
+        severity: "high",
+        fix: `Replace broad sources in ${name} with the specific origins this site requires.`,
+      });
+    }
+  }
+  for (const name of ["default-src", "object-src", "base-uri", "frame-ancestors"]) {
+    if (!directives.has(name)) {
+      issues.push({
+        message: `The ${name} directive is missing.`,
+        severity: "low",
+        fix: `Add a ${name} directive with the narrowest sources the site needs.`,
+      });
+    }
+  }
+  return issues;
+}
+
 function isPublicIPv4(address: string) {
   if (isIP(address) !== 4) return false;
   const [a, b] = address.split(".").map(Number);
@@ -100,8 +165,9 @@ async function getPublicAddress(hostname: string) {
 
 async function readHeaders(hostname: string, address: string): Promise<{
   headers: IncomingHttpHeaders;
+  statusCode: number | undefined;
   protocol: string | null;
-  certificate: PeerCertificate;
+  certificate: PeerCertificate | undefined;
 }> {
   return new Promise((resolve, reject) => {
     const request = https.request(
@@ -120,14 +186,16 @@ async function readHeaders(hostname: string, address: string): Promise<{
         },
       },
       (response) => {
-        response.resume();
         const socket = response.socket as TLSSocket;
-        const certificate = socket.getPeerCertificate();
+        const peerCertificate = socket.getPeerCertificate();
+        const certificate = peerCertificate.valid_to ? peerCertificate : undefined;
         resolve({
           headers: response.headers,
+          statusCode: response.statusCode,
           protocol: socket.getProtocol(),
           certificate,
         });
+        response.resume();
       },
     );
     request.on("timeout", () =>
@@ -138,26 +206,109 @@ async function readHeaders(hostname: string, address: string): Promise<{
   });
 }
 
-async function redirectsToHttps(hostname: string, address: string) {
-  return new Promise<boolean>((resolve) => {
-    const request = http.request({
-      hostname,
-      path: "/",
-      method: "HEAD",
-      timeout: 5000,
-      lookup: (_host, options, callback) => {
-        if (typeof options === "object" && options.all) callback(null, [{ address, family: 4 }]);
-        else callback(null, address, 4);
-      },
-    }, (response) => {
-      response.resume();
-      const location = response.headers.location;
-      resolve(response.statusCode !== undefined && response.statusCode >= 300 && response.statusCode < 400 && Boolean(location) && /^https:\/\//i.test(location!));
-    });
-    request.on("timeout", () => request.destroy());
-    request.on("error", () => resolve(false));
-    request.end();
-  });
+function validateRedirectTarget(target: URL, protocol: "http:" | "https:") {
+  if (
+    target.protocol !== protocol ||
+    target.username ||
+    target.password ||
+    target.port ||
+    !target.hostname ||
+    target.hostname.endsWith(".local") ||
+    target.hostname.endsWith(".localhost")
+  ) {
+    throw new Error("The site returned an unsupported or unsafe redirect.");
+  }
+}
+
+async function readFinalHttpsResponse(hostname: string) {
+  let current = new URL(`https://${hostname}/`);
+  const redirectChain: string[] = [];
+  const visited = new Set<string>();
+
+  for (let hop = 0; hop <= 5; hop += 1) {
+    const key = current.href;
+    if (visited.has(key)) throw new Error("The site returned a redirect loop.");
+    visited.add(key);
+    redirectChain.push(current.origin);
+    const address = await getPublicAddress(current.hostname);
+    const response = await readHeaders(current.hostname, address);
+    const location = response.headers.location;
+    if (
+      response.statusCode !== undefined &&
+      response.statusCode >= 300 &&
+      response.statusCode < 400 &&
+      location
+    ) {
+      const next = new URL(location, current);
+      if (next.protocol === "https:") {
+        validateRedirectTarget(next, "https:");
+        if (hop === 5) throw new Error("The site returned too many redirects.");
+        current = next;
+        continue;
+      }
+    }
+    return { ...response, finalHostname: current.hostname, redirectChain };
+  }
+  throw new Error("The site returned too many redirects.");
+}
+
+async function redirectsToHttps(hostname: string): Promise<{
+  result: "pass" | "fail" | "info";
+  chain: string[];
+  detail: string;
+}> {
+  let current = new URL(`http://${hostname}/`);
+  const chain: string[] = [];
+  const visited = new Set<string>();
+  try {
+    for (let hop = 0; hop <= 5; hop += 1) {
+      if (visited.has(current.href)) {
+        return { result: "fail", chain, detail: "The HTTP redirect chain contains a loop." };
+      }
+      visited.add(current.href);
+      chain.push(current.origin);
+      const address = await getPublicAddress(current.hostname);
+      const response = await new Promise<{ statusCode?: number; location?: string }>((resolve, reject) => {
+        const request = http.request({
+          hostname: current.hostname,
+          path: `${current.pathname}${current.search}`,
+          method: "HEAD",
+          timeout: 5000,
+          lookup: (_host, options, callback) => {
+            if (typeof options === "object" && options.all) callback(null, [{ address, family: 4 }]);
+            else callback(null, address, 4);
+          },
+        }, (incoming) => {
+          const data = { statusCode: incoming.statusCode, location: incoming.headers.location };
+          incoming.resume();
+          resolve(data);
+        });
+        request.on("timeout", () => request.destroy(new Error("HTTP redirect check timed out.")));
+        request.on("error", reject);
+        request.end();
+      });
+      if (response.statusCode !== undefined && response.statusCode >= 300 && response.statusCode < 400 && response.location) {
+        const next = new URL(response.location, current);
+        if (next.protocol === "https:") {
+          validateRedirectTarget(next, "https:");
+          chain.push(next.origin);
+          return { result: "pass", chain, detail: "HTTP redirects to HTTPS." };
+        }
+        validateRedirectTarget(next, "http:");
+        if (hop === 5) return { result: "fail", chain, detail: "The HTTP redirect chain exceeded five hops." };
+        current = next;
+        continue;
+      }
+      return { result: "fail", chain, detail: `HTTP returned ${response.statusCode ?? "no status"} without redirecting to HTTPS.` };
+    }
+  } catch (error) {
+    return {
+      result: "info",
+      chain,
+      detail: error instanceof Error ? `Could not verify the HTTP redirect: ${error.message}` : "Could not verify the HTTP redirect.",
+    };
+  }
+  return { result: "info", chain, detail: "Could not verify the HTTP redirect." };
 }
 
 export async function POST(request: Request) {
@@ -215,19 +366,38 @@ export async function POST(request: Request) {
 
   const startedAt = Date.now();
   try {
-    const address = await getPublicAddress(hostname);
-    const { headers, protocol, certificate } = await readHeaders(hostname, address);
+    const { headers, protocol, certificate, finalHostname, redirectChain } = await readFinalHttpsResponse(hostname);
     const findings: Finding[] = checks.map((check) => {
-      const value = String(headers[check.header] ?? "").toLowerCase();
+      const rawValue = String(headers[check.header] ?? "");
+      const value = rawValue.toLowerCase();
       let present = Boolean(value);
       let description = `${check.header} is present in the HTTPS response.`;
-      if (check.header === "content-security-policy" && (value.includes("'unsafe-inline'") || value.includes("'unsafe-eval'"))) {
-        present = false;
-        description = "The Content-Security-Policy allows unsafe-inline or unsafe-eval, which weakens script protections.";
+      let fix = check.fix;
+      let severity = check.severity;
+      if (check.header === "content-security-policy") {
+        if (!rawValue) {
+          present = false;
+          description = `No Content-Security-Policy header was returned by https://${finalHostname}/ after following redirects.`;
+          fix = `Configure a CSP for ${hostname}. Example starting point: ${check.fix} — adapt allowed sources to the site's scripts, styles, images, and APIs before deploying.`;
+        } else {
+          const issues = analyzeCsp(rawValue);
+          const weaknesses = issues.map((issue) => issue.message);
+          present = issues.length === 0;
+          description = present
+            ? `A CSP was returned by ${finalHostname}: ${rawValue.slice(0, 240)}${rawValue.length > 240 ? "…" : ""}`
+            : `The CSP returned by ${finalHostname} has these weaknesses: ${weaknesses.join(", ")}. Policy: ${rawValue.slice(0, -1)}${rawValue.length > 240 ? "…" : ""}`;
+          if (!present) {
+            severity = issues.some((issue) => issue.severity === "high") ? "high" : "low";
+            fix = issues.map((issue) => issue.fix).join(" ");
+          }
+        }
       }
-      if (check.header === "strict-transport-security" && (!/max-age\s*=\s*\d+/i.test(value) || /max-age\s*=\s*0(?:\D|$)/i.test(value))) {
+      if (check.header === "strict-transport-security" && !value) {
         present = false;
-        description = "HSTS is missing a usable max-age or disables it with max-age=0.";
+        description = `The Strict-Transport-Security header is missing from ${finalHostname}'s HTTPS response.`;
+      } else if (check.header === "strict-transport-security" && (!/max-age\s*=\s*\d+/i.test(value) || /max-age\s*=\s*0(?:\D|$)/i.test(value))) {
+        present = false;
+        description = "The HSTS header has no usable max-age or disables HSTS with max-age=0.";
       }
       if (check.header === "x-frame-options") {
         const csp = String(headers["content-security-policy"] ?? "").toLowerCase();
@@ -237,16 +407,25 @@ export async function POST(request: Request) {
       return {
         id: check.header,
         title: check.title,
-        severity: present ? "pass" : check.severity,
+        severity: present ? "pass" : severity,
         description: present ? description : (description === `${check.header} is present in the HTTPS response.` ? check.advice : description),
-        fix: present ? undefined : check.fix,
+        fix: present ? undefined : fix,
       };
     });
     const addFinding = (id: string, title: string, ok: boolean, severity: Severity, description: string, fix: string) => findings.push({ id, title, severity: ok ? "pass" : severity, description: ok ? `${title} check passed.` : description, fix: ok ? undefined : fix });
     const cookies = headers["set-cookie"] ?? [];
     for (const [flag, label] of [["secure", "Secure"], ["httponly", "HttpOnly"], ["samesite", "SameSite"]] as const) {
+      if (cookies.length === 0) {
+        findings.push({
+          id: `cookie-${flag}`,
+          title: `Cookie ${label} flag`,
+          severity: "info",
+          description: `Not applicable: ${finalHostname}'s final HTTPS response did not set any cookies.`,
+        });
+        continue;
+      }
       const missing = cookies.filter((cookie) => !cookie.toLowerCase().split(";").some((part) => part.trim().startsWith(`${flag}=`) || part.trim() === flag));
-      addFinding(`cookie-${flag}`, `Cookie ${label} flag`, cookies.length === 0 || missing.length === 0, flag === "secure" || flag === "httponly" ? "medium" : "low", cookies.length === 0 ? `No Set-Cookie header was returned, so ${label} could not be verified.` : `${missing.length} of ${cookies.length} cookies are missing the ${label} flag.`, `Set-Cookie: session=...; ${label}${flag === "samesite" ? "=Lax" : ""}`);
+      addFinding(`cookie-${flag}`, `Cookie ${label} flag`, missing.length === 0, flag === "secure" || flag === "httponly" ? "medium" : "low", `${missing.length} of ${cookies.length} cookies are missing the ${label} flag.`, `Set-Cookie: session=...; ${label}${flag === "samesite" ? "=Lax" : ""}`);
     }
     const server = String(headers.server ?? "");
     const poweredBy = String(headers["x-powered-by"] ?? "");
@@ -255,15 +434,29 @@ export async function POST(request: Request) {
     const modernTls = protocol === "TLSv1.2" || protocol === "TLSv1.3";
     addFinding("tls-version", "TLS protocol version", modernTls, "high", `The connection negotiated ${protocol ?? "an unknown TLS version"}; use TLS 1.2 or newer.`, "Configure the server to allow TLS 1.2 and TLS 1.3 only.");
     const expiry = certificate?.valid_to ? Date.parse(certificate.valid_to) : NaN;
-    const daysLeft = Math.floor((expiry - Date.now()) / 86400000);
-    addFinding("certificate-expiry", "TLS certificate expiry", Number.isFinite(expiry) && daysLeft > 30, daysLeft <= 0 ? "high" : "medium", Number.isFinite(expiry) ? `The certificate expires in ${daysLeft} days.` : "The certificate expiry could not be read.", "Renew the TLS certificate before it expires.");
-    const redirects = await redirectsToHttps(hostname, address);
-    addFinding("http-https-redirect", "HTTP to HTTPS redirect", redirects, "medium", "HTTP does not redirect to the HTTPS site.", "Configure the HTTP virtual host to return a permanent redirect to the same HTTPS URL.");
+    if (!Number.isFinite(expiry)) {
+      findings.push({
+        id: "certificate-expiry",
+        title: "TLS certificate expiry",
+        severity: "info",
+        description: `The scanner could not read the certificate expiry from ${finalHostname}; this does not count as a site finding.`,
+      });
+    } else {
+      const daysLeft = Math.floor((expiry - Date.now()) / 86400000);
+      addFinding("certificate-expiry", "TLS certificate expiry", daysLeft > 30, daysLeft <= 0 ? "high" : "medium", `The certificate expires in ${daysLeft} days.`, "Renew the TLS certificate before it expires.");
+    }
+    const httpRedirect = await redirectsToHttps(hostname);
+    if (httpRedirect.result === "info") {
+      findings.push({ id: "http-https-redirect", title: "HTTP to HTTPS redirect", severity: "info", description: httpRedirect.detail });
+    } else {
+      addFinding("http-https-redirect", "HTTP to HTTPS redirect", httpRedirect.result === "pass", "medium", httpRedirect.detail, "Configure HTTP to redirect to HTTPS, allowing an intermediate HTTP redirect such as the www hostname change.");
+    }
     const penalty: Record<Severity, number> = {
-      high: 25,
-      medium: 12,
-      low: 5,
+      high: 15,
+      medium: 6,
+      low: 2,
       pass: 0,
+      info: 0,
     };
 
     const score = Math.max(
@@ -273,6 +466,7 @@ export async function POST(request: Request) {
     const result: ScanResult = {
       id: randomUUID(),
       url: hostname,
+      redirectChain,
       scannedAt: new Date().toISOString(),
       durationMs: Date.now() - startedAt,
       score,

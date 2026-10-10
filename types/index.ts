@@ -1,4 +1,4 @@
-export type Severity = "high" | "medium" | "low" | "pass";
+export type Severity = "high" | "medium" | "low" | "pass" | "info";
 
 export interface Finding {
   id: string;
@@ -11,6 +11,7 @@ export interface Finding {
 export interface ScanResult {
   id: string;
   url: string;
+  redirectChain?: string[];
   scannedAt: string;
   durationMs: number;
   score: number;
