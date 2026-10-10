@@ -15,7 +15,7 @@ const Navbar = () => {
   return (
     <nav
       aria-label="Main navigation"
-      className="flex min-h-16 w-full  items-center gap-6"
+      className="flex min-h-16 w-full  items-center gap-6 select-none"
     >
       <Link
         href="/"
@@ -35,7 +35,7 @@ const Navbar = () => {
               href={href}
               key={href}
               aria-current={isActive ? "page" : undefined}
-              className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors sm:px-4 ${
+              className={`rounded-tr-2xl rounded-bl-2xl px-3 py-2 text-lg font-medium transition-colors sm:px-4 ${
                 isActive
                   ? "bg-violet-500/15 text-violet-200 shadow-sm shadow-black/10"
                   : "text-slate-400 hover:bg-slate-800/70 hover:text-slate-100"
