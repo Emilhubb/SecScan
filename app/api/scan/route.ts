@@ -385,7 +385,7 @@ export async function POST(request: Request) {
           present = issues.length === 0;
           description = present
             ? `A CSP was returned by ${finalHostname}: ${rawValue.slice(0, 240)}${rawValue.length > 240 ? "…" : ""}`
-            : `The CSP returned by ${finalHostname} has these weaknesses: ${weaknesses.join(", ")}. Policy: ${rawValue.slice(0, -1)}${rawValue.length > 240 ? "…" : ""}`;
+            : `The CSP returned by ${finalHostname} has these weaknesses: ${weaknesses.join(", ")}. Policy: ${rawValue.slice(0, 240)}${rawValue.length > 240 ? "…" : ""}`;
           if (!present) {
             severity = issues.some((issue) => issue.severity === "high") ? "high" : "low";
             fix = issues.map((issue) => issue.fix).join(" ");
