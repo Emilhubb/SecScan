@@ -1,5 +1,17 @@
 @import "tailwindcss";
 
+@theme inline {
+  --font-sans: var(--font-jetbrains);
+  --font-mono: var(--font-jetbrains);
+}
+
+body {
+  font-family: "JetBrains Mono", monospace;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+}
+
 @keyframes result-in {
   from {
     opacity: 0;

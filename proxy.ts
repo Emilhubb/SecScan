@@ -6,14 +6,14 @@ export function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const isDevelopment = process.env.NODE_ENV === "development";
   const stylePolicy = isDevelopment
-    ? "style-src 'self' 'unsafe-inline'"
-    : `style-src 'self' 'nonce-${nonce}'`;
+    ? "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com"
+    : `style-src 'self' 'nonce-${nonce}' https://fonts.googleapis.com`;
   const policy = [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDevelopment ? " 'unsafe-eval'" : ""}`,
     stylePolicy,
     "img-src 'self' data: blob:",
-    "font-src 'self'",
+    "font-src 'self' https://fonts.gstatic.com",
     "connect-src 'self'",
     "media-src 'self'",
     "frame-src 'none'",

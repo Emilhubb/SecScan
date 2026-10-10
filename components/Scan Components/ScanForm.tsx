@@ -31,14 +31,13 @@ export default function ScanForm({ onComplete }: { onComplete: (result: ScanResu
 
   return (
     <section className="w-full" aria-labelledby="scan-heading">
-      <div className="flex w-full flex-col gap-4 p-4 sm:p-6">
-        <h1 id="scan-heading" className="text-3xl font-medium text-white sm:text-4xl">Check a website’s security headers</h1>
-        <p className="text-lg text-slate-400">Runs a limited HTTPS and security-header check against a public domain.</p>
+      <div className="flex w-full flex-col gap-3 p-3 sm:gap-4 sm:p-6">
+        <h1 id="scan-heading" className="text-2xl font-medium leading-tight text-white sm:text-3xl lg:text-4xl">Check a website’s security headers</h1>
+        <p className="text-sm leading-relaxed text-slate-400 sm:text-base lg:text-lg">Runs a limited HTTPS and security-header check against a public domain.</p>
         <form onSubmit={handleSubmit} className="flex w-full flex-col gap-3 sm:flex-row">
           <label className="sr-only" htmlFor="domain">Domain to scan</label>
-          <label className="sr-only" htmlFor="domain">Domain to scan</label>
-          <input id="domain" name="domain" type="text" autoComplete="url" placeholder="example.com" value={domain} onChange={(event) => setDomain(event.target.value)} required maxLength={253} aria-describedby={error ? "scan-error" : undefined} className="min-w-0 flex-1 rounded-lg border border-slate-800 bg-slate-900/60 px-4 py-2.5 text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-violet-500" />
-          <button type="submit" disabled={pending} className="shrink-0 rounded-lg bg-violet-500 px-5 py-2.5 text-white hover:bg-violet-600 focus:outline-none focus:ring-2 focus:ring-violet-300 disabled:cursor-wait disabled:opacity-60">
+          <input id="domain" name="domain" type="text" inputMode="url" autoComplete="url" placeholder="example.com" value={domain} onChange={(event) => setDomain(event.target.value)} required maxLength={253} aria-describedby={error ? "scan-error" : undefined} className="min-h-11 min-w-0 flex-1 rounded-lg border border-slate-800 bg-slate-900/60 px-4 py-2.5 text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-violet-500" />
+          <button type="submit" disabled={pending} className="min-h-11 shrink-0 rounded-lg bg-violet-500 px-5 py-2.5 font-medium text-white transition-colors hover:bg-violet-600 focus:outline-none focus:ring-2 focus:ring-violet-300 disabled:cursor-wait disabled:opacity-60 sm:min-w-32">
             {pending ? "Scanning…" : "Scan Now"}
           </button>
         </form>

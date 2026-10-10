@@ -23,7 +23,7 @@ export default function Home() {
   }
 
   return (
-    <div className="mx-auto flex min-h-full w-full max-w-7xl flex-col items-center gap-6 px-4 py-5 text-white sm:px-6 lg:px-8">
+    <div className="mx-auto flex min-h-full w-full max-w-7xl flex-col items-center gap-4 px-3 py-4 text-white sm:gap-6 sm:px-6 sm:py-5 lg:px-8">
       <ScanForm onComplete={saveResult} />
       <div key={result?.id ?? "empty"} className="w-full">
         <ScanResult result={result} />

@@ -1,19 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ScanResult } from "@/types";
 
 const HISTORY_KEY = "secscan-history";
-const CHART_WIDTH = 900;
 const CHART_TOP = 24;
-const CHART_BOTTOM = 235;
-const CHART_LEFT = 64;
-const CHART_RIGHT = 876;
-const SCORE_LEVELS = [100, 75, 50, 25, 0];
-
-function scoreY(score: number) {
-  return CHART_BOTTOM - (score / 100) * (CHART_BOTTOM - CHART_TOP);
-}
+const SCORE_LEVELS = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10, 0];
 
 function readHistory(): ScanResult[] {
   try {
@@ -28,15 +20,17 @@ function readHistory(): ScanResult[] {
   }
 }
 
-function wrapWebsite(value: string) {
+function wrapWebsite(value: string, chunkSize: number) {
   const website = value.replace(/^www\./i, "");
-  const chunks = website.match(/.{1,16}/g) ?? [website];
+  const chunks = website.match(new RegExp(`.{1,${chunkSize}}`, "g")) ?? [website];
   if (chunks.length <= 3) return chunks;
-  return [chunks[0], chunks[1], `${chunks[2].slice(0, 15)}…`];
+  return [chunks[0], chunks[1], `${chunks[2].slice(0, chunkSize - 1)}…`];
 }
 
 export default function ScoreHistory() {
   const [scans, setScans] = useState<ScanResult[]>([]);
+  const chartRef = useRef<SVGSVGElement>(null);
+  const [chartSize, setChartSize] = useState({ width: 900, height: 560 });
 
   useEffect(() => {
     const refresh = () => setScans(readHistory());
@@ -49,10 +43,28 @@ export default function ScoreHistory() {
     };
   }, []);
 
+  useEffect(() => {
+    const chart = chartRef.current;
+    if (!chart) return;
+    const observer = new ResizeObserver(([entry]) => {
+      const width = Math.round(entry.contentRect.width);
+      const height = Math.round(entry.contentRect.height);
+      if (width > 0 && height > 0) setChartSize({ width, height });
+    });
+    observer.observe(chart);
+    return () => observer.disconnect();
+  }, []);
+
+  const chartBottom = Math.max(CHART_TOP + 80, chartSize.height - 100);
+  // Keep equal horizontal breathing room on both sides at every chart width.
+  const chartInset = Math.min(64, Math.max(42, chartSize.width * 0.08));
+  const chartLeft = chartInset;
+  const chartRight = Math.max(chartLeft + 40, chartSize.width - chartInset);
+  const scoreY = (score: number) => chartBottom - (score / 100) * (chartBottom - CHART_TOP);
   const points = scans.map((scan, index) => {
     const x = scans.length === 1
-      ? CHART_WIDTH / 2
-      : CHART_LEFT + (index / (scans.length - 1)) * (CHART_RIGHT - CHART_LEFT);
+      ? (chartLeft + chartRight) / 2
+      : chartLeft + (index / (scans.length - 1)) * (chartRight - chartLeft);
     const y = scoreY(Math.max(0, Math.min(100, scan.score)));
     return { x, y, scan };
   });
@@ -61,47 +73,40 @@ export default function ScoreHistory() {
   return (
     <section
       aria-labelledby="score-history-title"
-      className="mx-5 mb-6 my-15 flex min-h-[700px] flex-col rounded-2xl border border-violet-500/40 bg-gradient-to-br from-[#10051f] to-[#050818] px-5 pb-5 pt-4 sm:px-6"
+      className="mx-0 mb-5 mt-5 flex min-h-[440px] min-w-0 flex-col overflow-hidden rounded-2xl border border-violet-500/40 bg-gradient-to-br from-[#10051f] to-[#050818] px-3 pb-4 pt-4 sm:mb-6 sm:mt-6 sm:min-h-[580px] sm:px-6 sm:pb-5 lg:min-h-[700px]"
     >
-      <div className="flex items-center justify-between gap-3">
-        <h2 id="score-history-title" className="font-mono text-2xl font-bold text-white">
+      <div className="flex min-w-0 flex-wrap items-center justify-between gap-x-3 gap-y-1">
+        <h2 id="score-history-title" className="min-w-0 font-mono text-lg font-bold text-white sm:text-2xl">
           Score history
         </h2>
-        <span className="font-mono text-xs text-violet-300">
+        <span className="shrink-0 font-mono text-xs text-violet-300">
           Last {scans.length} {scans.length === 1 ? "scan" : "scans"}
         </span>
       </div>
 
-      <div className="mt-3 w-full flex-1">
+      <div className="mt-3 min-h-[350px] w-full min-w-0 flex-1 sm:min-h-[470px] lg:min-h-[580px]">
         <svg
+          ref={chartRef}
           aria-label={scans.length ? `Security score history for the last ${scans.length} scans` : "No score history yet"}
-          className="block h-72 -mx-5 my-15 w-full overflow-visible sm:h-80"
+          className="block h-full min-h-[350px] w-full overflow-hidden sm:min-h-[470px] lg:min-h-[580px]"
           role="img"
-          viewBox={`0 0 ${CHART_WIDTH} 200`}
+          viewBox={`0 0 ${chartSize.width} ${chartSize.height}`}
           preserveAspectRatio="none"
         >
-          <line x1={CHART_LEFT} x2={CHART_LEFT} y1={CHART_TOP} y2={CHART_BOTTOM} stroke="#4c3568" strokeWidth="1.5" />
+          <line x1={chartLeft} x2={chartLeft} y1={CHART_TOP} y2={chartBottom} stroke="#4c3568" strokeWidth="1.5" />
           {SCORE_LEVELS.map((score) => {
             const y = scoreY(score);
             return (
               <g key={score}>
-                <line x1={CHART_LEFT} x2={CHART_WIDTH} y1={y} y2={y} stroke="#24143b" strokeWidth="1.5" />
-                <text x={CHART_LEFT - 12} y={y + 4} textAnchor="end" fill="#8b7ba8" fontSize="11" fontFamily="monospace">
+                <line x1={chartLeft} x2={chartRight} y1={y} y2={y} stroke="#24143b" strokeWidth="1.5" />
+                <text x={chartLeft - 12} y={y + 4} textAnchor="end" fill="#8b7ba8" fontSize="11" fontFamily="monospace">
                   {score}
                 </text>
               </g>
             );
           })}
           {points.length > 1 && (
-            <polyline
-              points={line}
-              fill="none"
-              stroke="#a855f7"
-              strokeWidth="4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              vectorEffect="non-scaling-stroke"
-            />
+            <polyline points={line} fill="none" stroke="#a855f7" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
           )}
           {points.map(({ x, y, scan }) => (
             <circle key={scan.id} cx={x} cy={y} r="6.5" fill="#a855f7">
@@ -109,23 +114,15 @@ export default function ScoreHistory() {
             </circle>
           ))}
           {scans.length === 0 && (
-            <text x={CHART_WIDTH / 2} y="130" textAnchor="middle" fill="#64748b" fontSize="14">
+            <text x={chartSize.width / 2} y={chartSize.height / 2} textAnchor="middle" fill="#64748b" fontSize="14">
               Run scans to see your score history
             </text>
           )}
           {points.map(({ x, scan }) => (
-            <text
-              key={`${scan.id}-website`}
-              x={x}
-              y="300"
-              textAnchor="middle"
-              fill="#8b7ba8"
-              fontSize="11"
-              fontFamily="monospace"
-            >
-              {wrapWebsite(scan.url).map((line, index) => (
+            <text key={`${scan.id}-website`} x={x} y={chartSize.height - 58} textAnchor="middle" fill="#8b7ba8" fontSize={chartSize.width < 400 ? "9" : "11"} fontFamily="monospace">
+              {wrapWebsite(scan.url, chartSize.width < 400 ? 6 : chartSize.width < 640 ? 9 : 16).map((label, index) => (
                 <tspan key={`${scan.id}-${index}`} x={x} dy={index === 0 ? 0 : 14}>
-                  {line}
+                  {label}
                 </tspan>
               ))}
             </text>
