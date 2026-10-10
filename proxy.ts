@@ -5,10 +5,13 @@ import type { NextRequest } from "next/server";
 export function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const isDevelopment = process.env.NODE_ENV === "development";
+  const stylePolicy = isDevelopment
+    ? "style-src 'self' 'unsafe-inline'"
+    : `style-src 'self' 'nonce-${nonce}'`;
   const policy = [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDevelopment ? " 'unsafe-eval'" : ""}`,
-    `style-src 'self' 'nonce-${nonce}'`,
+    stylePolicy,
     "img-src 'self' data: blob:",
     "font-src 'self'",
     "connect-src 'self'",

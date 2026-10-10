@@ -19,7 +19,7 @@ export default function ScanResult({ result }: { result: ScanResultData | null }
         <span className="font-bold">Security score</span>
         <p className={`text-[100px] font-bold leading-tight ${grade.color}`}>{result.grade}</p>
         <p className="text-xl font-bold">{result.score} / 100</p>
-        <p className="mt-2 text-sm text-slate-400">{grade.label}</p>
+        <p className="mt-2 text-sm italic text-slate-400">{grade.label}</p>
       </div>
       <div className="flex-5 rounded-2xl border border-violet-400/20 bg-gradient-to-br from-[#140125] to-slate-950 py-8 text-center shadow-lg shadow-violet-950/30 sm:px-4">
         <div className="flex flex-col justify-between gap-2 px-5 text-start sm:flex-row sm:items-center">

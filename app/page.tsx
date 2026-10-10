@@ -5,6 +5,7 @@ import type { ScanResult as ScanResultData } from "@/types";
 import ScanFindings from "@/components/Scan Components/ScanFindings";
 import ScanForm from "@/components/Scan Components/ScanForm";
 import ScanResult from "@/components/Scan Components/ScanResult";
+import ScoreHistory from "@/components/Scan Components/ScoreHistory";
 
 const HISTORY_KEY = "secscan-history";
 
@@ -27,6 +28,7 @@ export default function Home() {
       <div key={result?.id ?? "empty"} className="w-full">
         <ScanResult result={result} />
         {result && <ScanFindings findings={result.findings} />}
+        <ScoreHistory />
       </div>
     </div>
   );
