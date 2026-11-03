@@ -2,12 +2,6 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import "./globals.css";
 import Navbar from "../components/Navbar Components/Navbar";
-import { JetBrains_Mono } from "next/font/google";
-
-const jetbrains = JetBrains_Mono({
-  subsets: ["latin", "latin-ext"],
-  variable: "--font-jetbrains",
-});
 export const metadata: Metadata = {
   title: {
     default: "SecScan | Website Security Scanner",
@@ -59,7 +53,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   await connection();
 
   return (
-    <html lang="en" className={`${jetbrains.variable} h-full antialiased`}>
+    <html lang="en" className="h-full antialiased">
       <body className="min-h-full flex flex-col bg-slate-950 font-sans">
         <div className="sticky top-0 z-50 border-b border-slate-800/80 bg-slate-950/85 px-3 py-1.5 backdrop-blur-xl sm:px-6 sm:py-2 lg:px-8">
           <Navbar />

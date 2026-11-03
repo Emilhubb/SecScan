@@ -7,6 +7,8 @@ import http from "node:http";
 import type { PeerCertificate, TLSSocket } from "node:tls";
 import type { Finding, ScanResult, Severity } from "@/types";
 import { getGrade } from "@/lib/grades";
+import { auth } from "@/lib/auth/server";
+import { db } from "@/lib/db";
 
 const checks: {
   title: string;
@@ -627,6 +629,23 @@ export async function POST(request: Request) {
       grade: getGrade(score).grade,
       findings,
     };
+    const { data: session } = await auth.getSession();
+    await db.query(
+      `INSERT INTO scan_results
+        (id, user_id, url, scanned_at, duration_ms, score, grade, redirect_chain, findings)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9::jsonb)`,
+      [
+        result.id,
+        session?.user.id ?? null,
+        result.url,
+        result.scannedAt,
+        result.durationMs,
+        result.score,
+        result.grade,
+        JSON.stringify(result.redirectChain ?? []),
+        JSON.stringify(result.findings),
+      ],
+    );
     return Response.json(result, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("scan failed", hostname, {

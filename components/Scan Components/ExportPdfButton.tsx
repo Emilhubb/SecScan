@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import type { ScanResult, Severity } from "@/types";
 
 const severityColors: Record<Severity, [number, number, number]> = {
@@ -25,9 +26,12 @@ function pdfSafe(value: string) {
 
 export default function ExportPdfButton({ result }: { result: ScanResult }) {
   const [isExporting, setIsExporting] = useState(false);
+  const [storageMessage, setStorageMessage] = useState("");
+  const [storedReportUrl, setStoredReportUrl] = useState("");
 
-  async function exportPdf() {
+  async function exportPdf(saveToCloud = false) {
     setIsExporting(true);
+    setStorageMessage("");
     try {
       const { jsPDF } = await import("jspdf");
       const pdf = new jsPDF({ format: "a4", unit: "pt" });
@@ -151,20 +155,43 @@ export default function ExportPdfButton({ result }: { result: ScanResult }) {
 
       const safeDomain = result.url.toLowerCase().replace(/[^a-z0-9.-]/g, "-");
       const date = new Date(result.scannedAt).toISOString().slice(0, 10);
-      pdf.save(`secscan-${safeDomain}-${date}.pdf`);
+      const filename = `secscan-${safeDomain}-${date}.pdf`;
+      if (saveToCloud) {
+        const form = new FormData();
+        form.set("scanId", result.id);
+        form.set("file", pdf.output("blob"), filename);
+        const response = await fetch("/api/reports", { method: "POST", body: form });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error ?? "Could not save report.");
+        setStoredReportUrl(data.url as string);
+        setStorageMessage("Saved to your private Neon Storage bucket.");
+      } else {
+        pdf.save(filename);
+      }
+    } catch (error) {
+      setStorageMessage(error instanceof Error ? error.message : "Could not save the report.");
     } finally {
       setIsExporting(false);
     }
   }
 
   return (
+    <div className="flex flex-wrap items-center gap-2">
     <button
       type="button"
-      onClick={exportPdf}
+      onClick={() => exportPdf()}
       disabled={isExporting}
       className="min-h-10 shrink-0 rounded-lg border border-violet-400/30 px-3 py-2 text-xs font-medium text-violet-200 transition-colors hover:bg-violet-500/15 disabled:cursor-wait disabled:opacity-60 sm:text-sm"
     >
       {isExporting ? "Preparing PDF..." : "Download PDF"}
     </button>
+    <span className="inline-flex items-center gap-2">
+      <button type="button" onClick={() => exportPdf(true)} disabled={isExporting} className="min-h-10 shrink-0 rounded-lg border border-violet-400/30 px-3 py-2 text-xs font-medium text-violet-200 transition-colors hover:bg-violet-500/15 disabled:cursor-wait disabled:opacity-60 sm:text-sm">
+        {isExporting ? "Saving…" : "Save to Neon"}
+      </button>
+      {storedReportUrl && <Link className="text-xs text-violet-200 underline" href={storedReportUrl}>Open saved report</Link>}
+      {storageMessage && <span role="status" className="max-w-52 text-xs text-slate-300">{storageMessage}</span>}
+    </span>
+    </div>
   );
 }

@@ -3,6 +3,7 @@
 import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import type { ScanResult } from "@/types";
+import CloudScanHistory from "@/components/CloudScanHistory";
 
 const HISTORY_KEY = "secscan-history";
 const PAGE_SIZE = 10;
@@ -30,6 +31,7 @@ export default function HistoryPage() {
 
   return (
     <section className="mx-auto flex min-h-full w-full max-w-4xl flex-col gap-4 px-3 py-6 text-white sm:gap-6 sm:px-6 sm:py-10">
+      <CloudScanHistory />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold sm:text-3xl">Scan history</h1>
         {history.length > 0 && <button type="button" onClick={clearHistory} className="min-h-10 rounded-md px-2 text-sm text-violet-300 underline underline-offset-4">Clear history</button>}

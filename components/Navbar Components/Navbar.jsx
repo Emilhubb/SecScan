@@ -7,6 +7,7 @@ const links = [
   { label: "Scan", href: "/" },
   { label: "History", href: "/history" },
   { label: "About", href: "/about" },
+  { label: "Account", href: "/auth" },
 ];
 
 const Navbar = () => {

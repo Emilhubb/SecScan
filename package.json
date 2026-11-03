@@ -6,13 +6,26 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "db:migrate": "node --env-file=.env.local scripts/migrate.mjs",
+    "neon:smoke": "node --env-file=.env.local scripts/smoke-neon.mjs",
+    "neon:smoke-app": "node --env-file=.env.local scripts/smoke-app.mjs",
     "lint": "eslint"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1161.0",
+    "@neon/auth": "^0.8.2",
+    "@neon/config": "^1.10.0",
+    "@neon/env": "^1.6.8",
+    "@neon/realtime": "^0.1.2",
+    "@neon/realtime-react": "^0.1.1",
+    "@types/pg": "^8.23.1",
+    "@types/ws": "^8.18.2",
     "jspdf": "^4.2.1",
     "next": "16.4.0",
+    "pg": "^8.23.1",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "ws": "^8.22.1"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",

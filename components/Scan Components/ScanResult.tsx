@@ -1,9 +1,35 @@
+"use client";
+
+import { useState } from "react";
 import type { ScanResult as ScanResultData } from "@/types";
 import { getGrade } from "@/lib/grades";
 import ExportPdfButton from "@/components/Scan Components/ExportPdfButton";
 
 export default function ScanResult({ result }: { result: ScanResultData | null }) {
+  const [summary, setSummary] = useState("");
+  const [summaryError, setSummaryError] = useState("");
+  const [summarizing, setSummarizing] = useState(false);
+
   if (!result) return <p className="w-full px-3 text-sm text-slate-400 sm:px-5">Submit a domain to see its scan report.</p>;
+
+  async function generateSummary() {
+    setSummarizing(true);
+    setSummaryError("");
+    try {
+      const response = await fetch("/api/scan/summary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(result),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "Could not create an AI summary.");
+      setSummary(data.summary as string);
+    } catch (error) {
+      setSummaryError(error instanceof Error ? error.message : "Could not create an AI summary.");
+    } finally {
+      setSummarizing(false);
+    }
+  }
 
   const groups = [
     { label: "High", severity: "high", color: "text-[#f0615a]" },
@@ -29,6 +55,13 @@ export default function ScanResult({ result }: { result: ScanResultData | null }
         </div>
         <div className="mt-3 flex justify-start px-4 sm:justify-end sm:px-2">
           <ExportPdfButton result={result} />
+        </div>
+        <div className="mt-3 px-4 text-start sm:px-2">
+          <button type="button" onClick={generateSummary} disabled={summarizing} className="min-h-10 rounded-lg border border-violet-400/30 px-3 py-2 text-xs font-medium text-violet-200 hover:bg-violet-500/15 disabled:opacity-60 sm:text-sm">
+            {summarizing ? "Generating summary…" : "AI security summary"}
+          </button>
+          {summaryError && <p role="alert" className="mt-2 text-sm text-rose-300">{summaryError}</p>}
+          {summary && <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-slate-300">{summary}</p>}
         </div>
         {result.redirectChain && result.redirectChain.length > 1 && (
           <p className="mt-3 break-all px-4 text-start text-xs leading-relaxed text-slate-400 sm:px-2 sm:text-sm">
