@@ -39,13 +39,23 @@ export default function CloudScanHistory() {
 }
 
 function LiveHistory({ subscription, refresh }: { subscription: Subscription; refresh: () => Promise<Subscription> }) {
-  const [client] = useState(() => createRealtimeClient({ url: subscription.url }));
+  const [client] = useState(() => createRealtimeClient({ url: toWebSocketUrl(subscription.url) }));
   const refreshQuery = useCallback(async () => (await refresh()).query, [refresh]);
   return (
     <RealtimeProvider client={client}>
       <SyncedRows query={subscription.query} refreshQuery={refreshQuery} />
     </RealtimeProvider>
   );
+}
+
+function toWebSocketUrl(value: string) {
+  const url = new URL(value);
+  if (url.protocol === "https:") url.protocol = "wss:";
+  else if (url.protocol === "http:") url.protocol = "ws:";
+  if (url.protocol !== "wss:" && url.protocol !== "ws:") {
+    throw new Error("Neon Realtime URL must use HTTPS or WSS.");
+  }
+  return url.toString();
 }
 
 function SyncedRows({ query, refreshQuery }: { query: SealedLiveQuery<CloudScan>; refreshQuery: () => Promise<SealedLiveQuery<CloudScan>> }) {

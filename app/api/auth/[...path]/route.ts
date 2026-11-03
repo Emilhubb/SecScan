@@ -1,3 +1,9 @@
-import { auth } from "@/lib/auth/server";
+import { getAuth } from "@/lib/auth/server";
 
-export const { GET, POST, PUT, DELETE, PATCH } = auth.handler();
+type RouteContext = { params: Promise<{ path: string[] }> };
+
+export const GET = (request: Request, context: RouteContext) => getAuth().handler().GET(request, context);
+export const POST = (request: Request, context: RouteContext) => getAuth().handler().POST(request, context);
+export const PUT = (request: Request, context: RouteContext) => getAuth().handler().PUT(request, context);
+export const DELETE = (request: Request, context: RouteContext) => getAuth().handler().DELETE(request, context);
+export const PATCH = (request: Request, context: RouteContext) => getAuth().handler().PATCH(request, context);

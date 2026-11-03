@@ -1,8 +1,8 @@
 import { rawSql, createRealtime } from "@neon/realtime/server";
-import { auth } from "@/lib/auth/server";
+import { getAuth } from "@/lib/auth/server";
 
 export async function POST() {
-  const { data: session } = await auth.getSession();
+  const { data: session } = await getAuth().getSession();
   if (!session?.user) {
     return Response.json({ error: "Sign in to subscribe to cloud history." }, { status: 401 });
   }

@@ -1,10 +1,10 @@
 import { connection } from "next/server";
-import { auth } from "@/lib/auth/server";
+import { getAuth } from "@/lib/auth/server";
 import { db } from "@/lib/db";
 
 export async function GET() {
   await connection();
-  const { data: session } = await auth.getSession();
+  const { data: session } = await getAuth().getSession();
   if (!session?.user) {
     return Response.json({ error: "Sign in to view cloud history." }, { status: 401 });
   }

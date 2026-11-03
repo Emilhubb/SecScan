@@ -1,11 +1,11 @@
 import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { randomUUID } from "node:crypto";
-import { auth } from "@/lib/auth/server";
+import { getAuth } from "@/lib/auth/server";
 import { db } from "@/lib/db";
 import { storage, storageBucket } from "@/lib/storage";
 
 export async function POST(request: Request) {
-  const { data: session } = await auth.getSession();
+  const { data: session } = await getAuth().getSession();
   if (!session?.user) {
     return Response.json({ error: "Sign in to save reports to Neon Storage." }, { status: 401 });
   }

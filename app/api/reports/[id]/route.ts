@@ -1,5 +1,5 @@
 import { GetObjectCommand } from "@aws-sdk/client-s3";
-import { auth } from "@/lib/auth/server";
+import { getAuth } from "@/lib/auth/server";
 import { db } from "@/lib/db";
 import { storage, storageBucket } from "@/lib/storage";
 
@@ -7,7 +7,7 @@ export async function GET(
   _request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
-  const { data: session } = await auth.getSession();
+  const { data: session } = await getAuth().getSession();
   if (!session?.user) return new Response("Sign in required.", { status: 401 });
 
   const { id } = await context.params;

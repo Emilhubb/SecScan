@@ -7,7 +7,7 @@ import http from "node:http";
 import type { PeerCertificate, TLSSocket } from "node:tls";
 import type { Finding, ScanResult, Severity } from "@/types";
 import { getGrade } from "@/lib/grades";
-import { auth } from "@/lib/auth/server";
+import { getAuth } from "@/lib/auth/server";
 import { db } from "@/lib/db";
 
 const checks: {
@@ -629,7 +629,7 @@ export async function POST(request: Request) {
       grade: getGrade(score).grade,
       findings,
     };
-    const { data: session } = await auth.getSession();
+    const { data: session } = await getAuth().getSession();
     await db.query(
       `INSERT INTO scan_results
         (id, user_id, url, scanned_at, duration_ms, score, grade, redirect_chain, findings)
