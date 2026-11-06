@@ -22,7 +22,7 @@ export default function GooglePopupCompletePage() {
         return;
       }
 
-      setMessage("You are signed in. You can close this window.");
+      window.close();
     }).catch(() => {
       if (active) setMessage("Could not finish sign-in. Close this window and try again.");
     });

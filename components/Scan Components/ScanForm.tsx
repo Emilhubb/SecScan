@@ -32,7 +32,7 @@ export default function ScanForm({ onComplete }: { onComplete: (result: ScanResu
   return (
     <section className="w-full" aria-labelledby="scan-heading">
       <div className="flex w-full flex-col gap-3 p-3 sm:gap-4 sm:p-6">
-        <h1 id="scan-heading" className="text-2xl font-medium leading-tight text-white sm:text-3xl lg:text-4xl">Check a website’s security headers</h1>
+        <h1 id="scan-heading" className="text-2xl font-medium leading-tight text-white sm:text-3xl lg:text-4xl">Check a Website’s Security Headers</h1>
         <p className="text-sm leading-relaxed text-slate-400 sm:text-base lg:text-lg">Runs a limited HTTPS and security-header check against a public domain.</p>
         <form onSubmit={handleSubmit} className="flex w-full flex-col gap-3 sm:flex-row">
           <label className="sr-only" htmlFor="domain">Domain to scan</label>

@@ -427,7 +427,7 @@ export async function POST(request: Request) {
   }
 
   const startedAt = Date.now();
-  let failureStage: "https" | "processing" | "storage" = "https";
+  let failureStage: "https" | "processing" | "auth" | "database" = "https";
   try {
     const { headers, protocol, certificate, finalHostname, redirectChain } =
       await readFinalHttpsResponse(hostname);
@@ -631,8 +631,14 @@ export async function POST(request: Request) {
       grade: getGrade(score).grade,
       findings,
     };
-    failureStage = "storage";
-    const { data: session } = await getAuth().getSession();
+    failureStage = "auth";
+    const { data: session, error: sessionError } = await getAuth().getSession();
+    if (sessionError) throw new Error("Neon Auth session lookup failed.");
+
+    failureStage = "database";
+    if (!process.env.DATABASE_URL_POOLED && !process.env.DATABASE_URL) {
+      throw new Error("Missing required config: DATABASE_URL_POOLED or DATABASE_URL.");
+    }
     await db.query(
       `INSERT INTO scan_results
         (id, user_id, url, scanned_at, duration_ms, score, grade, redirect_chain, findings)
@@ -656,9 +662,15 @@ export async function POST(request: Request) {
       code: (error as NodeJS.ErrnoException)?.code,
       message: error instanceof Error ? error.message : error,
     });
-    if (failureStage === "storage") {
+    if (failureStage === "auth") {
       return Response.json(
-        { error: "The site was scanned, but SecScan could not save the result. Check the production auth and database configuration." },
+        { error: "The site was scanned, but SecScan could not check your session. Check the production Neon Auth configuration." },
+        { status: 503, headers: { "Cache-Control": "no-store" } },
+      );
+    }
+    if (failureStage === "database") {
+      return Response.json(
+        { error: "The site was scanned, but SecScan could not save the result. Check the production database configuration." },
         { status: 503, headers: { "Cache-Control": "no-store" } },
       );
     }
