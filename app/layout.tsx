@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import Link from "next/link";
 import "./globals.css";
+import { Analytics } from "@vercel/analytics/next";
 import Navbar from "../components/Navbar Components/Navbar";
 export const metadata: Metadata = {
   title: {
@@ -77,6 +78,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             Privacy Policy
           </Link>
         </footer>
+
+        <Analytics />
       </body>
     </html>
   );
