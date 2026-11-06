@@ -21,9 +21,27 @@ export default function CloudScanHistory() {
       method: "POST",
       cache: "no-store",
     });
-    const data = await response.json();
+    const body = await response.text();
+    let parsed: unknown;
+    try {
+      parsed = body ? JSON.parse(body) : {};
+    } catch {
+      parsed = {};
+    }
+    const data =
+      typeof parsed === "object" && parsed !== null
+        ? (parsed as {
+            error?: string;
+            url?: string;
+            query?: SealedLiveQuery<CloudScan>;
+          })
+        : {};
     if (!response.ok)
-      throw new Error(data.error ?? "Could not connect to Neon Realtime.");
+      throw new Error(
+        data.error ?? `Cloud history is unavailable (HTTP ${response.status}). Try again later.`,
+      );
+    if (!data.url || !data.query)
+      throw new Error("Cloud history returned an invalid response. Try again later.");
     setNotice("");
     return data as Subscription;
   }, []);
