@@ -46,6 +46,9 @@ export const metadata: Metadata = {
     icon: "/logo.png",
     shortcut: "/logo.png",
   },
+  verification: {
+    google: "google-site-verification=gce9NJXBje1WYEvByCwphTuIwBvjXSrZFGZSfQzm5Qg",
+  },
 };
 
 export const instant = false;
