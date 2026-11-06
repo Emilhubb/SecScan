@@ -427,9 +427,11 @@ export async function POST(request: Request) {
   }
 
   const startedAt = Date.now();
+  let failureStage: "https" | "processing" | "storage" = "https";
   try {
     const { headers, protocol, certificate, finalHostname, redirectChain } =
       await readFinalHttpsResponse(hostname);
+    failureStage = "processing";
     const findings: Finding[] = checks.map((check) => {
       const rawValue = String(headers[check.header] ?? "");
       const value = rawValue.toLowerCase();
@@ -629,6 +631,7 @@ export async function POST(request: Request) {
       grade: getGrade(score).grade,
       findings,
     };
+    failureStage = "storage";
     const { data: session } = await getAuth().getSession();
     await db.query(
       `INSERT INTO scan_results
@@ -649,9 +652,22 @@ export async function POST(request: Request) {
     return Response.json(result, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("scan failed", hostname, {
+      stage: failureStage,
       code: (error as NodeJS.ErrnoException)?.code,
       message: error instanceof Error ? error.message : error,
     });
+    if (failureStage === "storage") {
+      return Response.json(
+        { error: "The site was scanned, but SecScan could not save the result. Check the production auth and database configuration." },
+        { status: 503, headers: { "Cache-Control": "no-store" } },
+      );
+    }
+    if (failureStage === "processing") {
+      return Response.json(
+        { error: "The site responded, but SecScan could not process the scan." },
+        { status: 500, headers: { "Cache-Control": "no-store" } },
+      );
+    }
     const message =
       error instanceof Error
         ? error.message
