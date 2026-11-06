@@ -47,7 +47,8 @@ export const metadata: Metadata = {
     shortcut: "/logo.png",
   },
   verification: {
-    google: "google-site-verification=gce9NJXBje1WYEvByCwphTuIwBvjXSrZFGZSfQzm5Qg",
+    google:
+      "google-site-verification=gce9NJXBje1WYEvByCwphTuIwBvjXSrZFGZSfQzm5Qg",
   },
 };
 
@@ -58,6 +59,10 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
 
   return (
     <html lang="en" className="h-full antialiased">
+      <meta
+        name="google-site-verification"
+        content="9je-cYeHm5VlgUBJ7-6EMIi5qRGIM1wXjXLYrCzc3nw"
+      />
       <body className="min-h-full flex flex-col bg-slate-950 font-sans">
         <div className="sticky top-0 z-50 border-b border-slate-800/80 bg-slate-950/85 px-3 py-1.5 backdrop-blur-xl sm:px-6 sm:py-2 lg:px-8">
           <Navbar />
