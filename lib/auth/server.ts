@@ -15,3 +15,4 @@ export function getAuth() {
   authInstance = createNeonAuth({ baseUrl, cookies: { secret } });
   return authInstance;
 }
+  

@@ -5,6 +5,8 @@ import type { NextRequest } from "next/server";
 export function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const isDevelopment = process.env.NODE_ENV === "development";
+  const realtimeUrl = process.env.NEON_REALTIME_URL;
+  const wsOrigin = realtimeUrl ? realtimeUrl.replace(/^https:/, "wss:").replace(/\/$/, "") : "";
   const stylePolicy = isDevelopment
     ? "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com"
     : `style-src 'self' 'nonce-${nonce}' https://fonts.googleapis.com`;
@@ -14,7 +16,7 @@ export function proxy(request: NextRequest) {
     stylePolicy,
     "img-src 'self' data: blob:",
     "font-src 'self' https://fonts.gstatic.com",
-    "connect-src 'self'",
+    `connect-src 'self'${wsOrigin ? ` ${wsOrigin}` : ""}`,
     "media-src 'self'",
     "frame-src 'none'",
     "object-src 'none'",

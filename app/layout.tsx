@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
+import Link from "next/link";
 import "./globals.css";
 import Navbar from "../components/Navbar Components/Navbar";
 export const metadata: Metadata = {
@@ -59,8 +60,14 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           <Navbar />
         </div>
         <main className="flex-1">{children}</main>
-        <footer className="border-t select-none border-slate-800/80 px-3 py-4 text-center text-xs text-slate-400 sm:px-6 sm:py-5 sm:text-sm">
-          © 2026 Emil Kazimov
+        <footer className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border-t border-slate-800/80 px-3 py-4 text-center text-xs text-slate-400 sm:px-6 sm:py-5 sm:text-sm">
+          <span>© 2026 Emil Kazimov</span>
+          <Link
+            href="/privacy"
+            className="underline decoration-slate-600 underline-offset-4 transition-colors hover:text-slate-200"
+          >
+            Privacy Policy
+          </Link>
         </footer>
       </body>
     </html>
