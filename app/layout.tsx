@@ -77,6 +77,12 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           >
             Privacy Policy
           </Link>
+          <Link
+            href="/terms"
+            className="underline decoration-slate-600 underline-offset-4 transition-colors hover:text-slate-200"
+          >
+            Terms of Service
+          </Link>
         </footer>
 
         <Analytics />
