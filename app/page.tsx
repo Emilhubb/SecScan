@@ -33,16 +33,15 @@ export default function Home() {
   }
 
   return (
-    <div className="mx-auto flex min-h-full w-full max-w-7xl flex-col items-center gap-5 px-3 py-5 text-white sm:gap-7 sm:px-6 sm:py-8 lg:px-8">
+    <div className="mx-auto select-none flex min-h-full w-full max-w-7xl flex-col items-center gap-5 px-3 py-5 text-white sm:gap-7 sm:px-6 sm:py-8 lg:px-8">
       <header className="w-full max-w-4xl px-1 text-center sm:px-4">
         <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl">
           Check a website’s security configuration
         </h1>
-        <p className="mx-auto mt-3 max-w-3xl text-sm leading-7 text-slate-300 sm:text-base">
+        <p className="mx-auto mt-3 max-w-3xl text-[11px] leading-7 text-slate-300 sm:text-base">
           SecScan checks a public website’s HTTPS response, security headers,
           cookies, TLS certificate, and redirects. Get a security score with
-          clear findings and practical suggestions. Scans are read-only and do
-          not change the website.
+          clear findings and practical suggestions.
         </p>
       </header>
       <ScanForm onComplete={saveResult} />

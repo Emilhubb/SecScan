@@ -21,7 +21,7 @@ const Navbar = () => {
       <Link
         href="/"
         aria-label="SecScan home"
-        className="group inline-flex shrink-0 items-center gap-2 "
+        className="group inline-flex shrink-0 items-center gap-2 py-2 "
       >
         <span aria-hidden="true" className="navbar-logo size-8 shrink-0 sm:size-9" />
         <span className="text-xl font-bold tracking-tight text-white sm:text-3xl lg:text-4xl">
@@ -37,7 +37,7 @@ const Navbar = () => {
               href={href}
               key={href}
               aria-current={isActive ? "page" : undefined}
-              className={`min-h-10 rounded-tr-xl hover:transform hover:scale-105 hover:duration-300 rounded-bl-xl px-2 py-2 text-xs font-medium transition-colors sm:rounded-tr-2xl sm:rounded-bl-2xl sm:px-3 sm:text-lg sm:font-bold lg:px-4 ${
+              className={`min-h-10 rounded-tr-xl hover:transform hover:scale-105 hover:duration-300 rounded-bl-xl px-2 py-3  text-xs font-medium transition-colors sm:rounded-tr-2xl sm:rounded-bl-2xl sm:px-3 sm:text-lg sm:font-bold lg:px-4 ${
                 isActive
                   ? "bg-violet-500/15 text-violet-200 shadow-sm shadow-black/10"
                   : "text-slate-400 hover:bg-slate-800/70 hover:text-slate-100"
