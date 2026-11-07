@@ -48,8 +48,8 @@ export const metadata: Metadata = {
     shortcut: "/logo.png",
   },
   verification: {
-    google: "gce9NJXBje1WYEvByCwphTuIwBvjXSrZFGZSfQzm5Qg",
-  },
+    google: "b3DJB8FNahZzTgYVKlYWstpD_jqeMjEmSK0bt1lMz3g",
+  }
 };
 
 export const instant = false;
