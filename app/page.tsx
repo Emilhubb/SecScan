@@ -34,15 +34,11 @@ export default function Home() {
 
   return (
     <div className="mx-auto select-none flex min-h-full w-full max-w-7xl flex-col items-center gap-5 px-3 py-5 text-white sm:gap-7 sm:px-6 sm:py-8 lg:px-8">
-      <header className="w-full max-w-4xl px-1 text-center sm:px-4">
-        <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl">
-          Check a website’s security configuration
+      <header className="w-full max-w-4xl px-1 text-center sm:px-10">
+        <h1 className="mt-2 text-2xl font-bold italic tracking-tight sm:text-3xl lg:text-4xl">
+          SecScan - Website Security Scanner
         </h1>
-        <p className="mx-auto mt-3 max-w-3xl text-[11px] leading-7 text-slate-300 sm:text-base">
-          SecScan checks a public website’s HTTPS response, security headers,
-          cookies, TLS certificate, and redirects. Get a security score with
-          clear findings and practical suggestions.
-        </p>
+        
       </header>
       <ScanForm onComplete={saveResult} />
       <div className="grid w-full min-w-0 grid-cols-1 gap-4 px-0 sm:px-2 md:grid-cols-2">
@@ -50,7 +46,7 @@ export default function Home() {
           <details className="group rounded-xl border border-slate-800 bg-slate-900/40 p-4 sm:p-5">
             <summary
               id="how-secscan-works"
-              className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 text-left text-base font-semibold text-white marker:content-none [&::-webkit-details-marker]:hidden sm:text-lg"
+              className="flex min-h-5 cursor-pointer list-none items-center justify-between gap-3 text-left text-base font-semibold text-white marker:content-none [&::-webkit-details-marker]:hidden sm:text-lg"
             >
               <span>How SecScan works</span>
               <svg
@@ -85,7 +81,7 @@ export default function Home() {
         </section>
         <section aria-label="Accounts and your information" className="w-full min-w-0 text-sm leading-7 text-slate-300">
           <details className="group rounded-xl border border-slate-800 bg-slate-900/40 p-4 sm:p-5">
-            <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 text-left text-base font-semibold text-white marker:content-none [&::-webkit-details-marker]:hidden sm:text-lg">
+            <summary className="flex min-h-5 cursor-pointer list-none items-center justify-between gap-3 text-left text-base font-semibold text-white marker:content-none [&::-webkit-details-marker]:hidden sm:text-lg">
               <span>Accounts and your information</span>
               <svg
                 aria-hidden="true"

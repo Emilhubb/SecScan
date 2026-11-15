@@ -7,7 +7,7 @@ import ExportPdfButton from "@/components/Scan Components/ExportPdfButton";
 
 export default function ScanResult({ result }: { result: ScanResultData | null }) {
 
-  if (!result) return <p className="w-full px-3 text-sm text-slate-400 sm:px-5">Submit a domain to see its scan report.</p>;
+  if (!result) return null;
 
 
   const groups = [
