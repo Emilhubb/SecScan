@@ -26,12 +26,8 @@ function pdfSafe(value: string) {
 
 export default function ExportPdfButton({ result }: { result: ScanResult }) {
   const [isExporting, setIsExporting] = useState(false);
-  const [storageMessage, setStorageMessage] = useState("");
-  const [storedReportUrl, setStoredReportUrl] = useState("");
-
-  async function exportPdf(saveToCloud = false) {
+  async function exportPdf() {
     setIsExporting(true);
-    setStorageMessage("");
     try {
       const { jsPDF } = await import("jspdf");
       const pdf = new jsPDF({ format: "a4", unit: "pt" });
@@ -48,14 +44,25 @@ export default function ExportPdfButton({ result }: { result: ScanResult }) {
         }
       };
 
-      const addParagraph = (value: string, options?: { fontSize?: number; color?: [number, number, number]; left?: number; lineHeight?: number }) => {
+      const addParagraph = (
+        value: string,
+        options?: {
+          fontSize?: number;
+          color?: [number, number, number];
+          left?: number;
+          lineHeight?: number;
+        },
+      ) => {
         const fontSize = options?.fontSize ?? 10;
         const lineHeight = options?.lineHeight ?? fontSize * 1.45;
         const left = options?.left ?? margin;
         pdf.setFontSize(fontSize);
         const color = options?.color ?? [52, 59, 74];
         pdf.setTextColor(color[0], color[1], color[2]);
-        const lines = pdf.splitTextToSize(pdfSafe(value), contentWidth - (left - margin));
+        const lines = pdf.splitTextToSize(
+          pdfSafe(value),
+          contentWidth - (left - margin),
+        );
         ensureSpace(lines.length * lineHeight + 4);
         pdf.text(lines, left, y);
         y += lines.length * lineHeight + 4;
@@ -78,7 +85,11 @@ export default function ExportPdfButton({ result }: { result: ScanResult }) {
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(9);
       pdf.setTextColor(100, 108, 125);
-      pdf.text(`Scanned: ${pdfSafe(new Date(result.scannedAt).toLocaleString())}`, margin, y);
+      pdf.text(
+        `Scanned: ${pdfSafe(new Date(result.scannedAt).toLocaleString())}`,
+        margin,
+        y,
+      );
       y += 18;
 
       pdf.setFillColor(245, 242, 250);
@@ -93,8 +104,16 @@ export default function ExportPdfButton({ result }: { result: ScanResult }) {
       pdf.text("Security score", margin + 14, y + 46);
       pdf.setFontSize(8);
       let countX = margin + 190;
-      for (const severity of ["high", "medium", "low", "pass", "info"] as const) {
-        const count = result.findings.filter((finding) => finding.severity === severity).length;
+      for (const severity of [
+        "high",
+        "medium",
+        "low",
+        "pass",
+        "info",
+      ] as const) {
+        const count = result.findings.filter(
+          (finding) => finding.severity === severity,
+        ).length;
         pdf.setTextColor(...severityColors[severity]);
         pdf.text(`${severity.toUpperCase()} ${count}`, countX, y + 34);
         countX += severity === "medium" ? 66 : 58;
@@ -102,7 +121,10 @@ export default function ExportPdfButton({ result }: { result: ScanResult }) {
       y += 80;
 
       if (result.redirectChain && result.redirectChain.length > 1) {
-        addParagraph(`Redirect path: ${result.redirectChain.join(" -> ")}`, { fontSize: 9, color: [100, 108, 125] });
+        addParagraph(`Redirect path: ${result.redirectChain.join(" -> ")}`, {
+          fontSize: 9,
+          color: [100, 108, 125],
+        });
         y += 4;
       }
 
@@ -116,10 +138,25 @@ export default function ExportPdfButton({ result }: { result: ScanResult }) {
       y += 22;
 
       for (const finding of result.findings) {
-        const titleLines = pdf.splitTextToSize(pdfSafe(finding.title), contentWidth - 95);
-        const descriptionLines = pdf.splitTextToSize(pdfSafe(finding.description), contentWidth);
-        const fixLines = finding.fix ? pdf.splitTextToSize(`Recommended fix: ${pdfSafe(finding.fix)}`, contentWidth) : [];
-        const blockHeight = titleLines.length * 14 + descriptionLines.length * 13 + fixLines.length * 13 + 24;
+        const titleLines = pdf.splitTextToSize(
+          pdfSafe(finding.title),
+          contentWidth - 95,
+        );
+        const descriptionLines = pdf.splitTextToSize(
+          pdfSafe(finding.description),
+          contentWidth,
+        );
+        const fixLines = finding.fix
+          ? pdf.splitTextToSize(
+              `Recommended fix: ${pdfSafe(finding.fix)}`,
+              contentWidth,
+            )
+          : [];
+        const blockHeight =
+          titleLines.length * 14 +
+          descriptionLines.length * 13 +
+          fixLines.length * 13 +
+          24;
         ensureSpace(Math.min(blockHeight, pageHeight - margin * 2));
 
         pdf.setFont("helvetica", "bold");
@@ -129,12 +166,19 @@ export default function ExportPdfButton({ result }: { result: ScanResult }) {
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(7);
         pdf.setTextColor(...severityColors[finding.severity]);
-        pdf.text(finding.severity.toUpperCase(), pageWidth - margin, y, { align: "right" });
+        pdf.text(finding.severity.toUpperCase(), pageWidth - margin, y, {
+          align: "right",
+        });
         y += titleLines.length * 13 + 3;
 
         addParagraph(finding.description, { fontSize: 9, lineHeight: 12 });
         if (finding.fix) {
-          addParagraph(`Recommended fix: ${finding.fix}`, { fontSize: 8, color: [87, 67, 125], left: margin + 8, lineHeight: 11 });
+          addParagraph(`Recommended fix: ${finding.fix}`, {
+            fontSize: 8,
+            color: [87, 67, 125],
+            left: margin + 8,
+            lineHeight: 11,
+          });
         }
         y += 8;
         ensureSpace(20);
@@ -150,48 +194,33 @@ export default function ExportPdfButton({ result }: { result: ScanResult }) {
         pdf.setFontSize(8);
         pdf.setTextColor(135, 139, 151);
         pdf.text("Generated by SecScan", margin, pageHeight - 22);
-        pdf.text(`${page} / ${totalPages}`, pageWidth - margin, pageHeight - 22, { align: "right" });
+        pdf.text(
+          `${page} / ${totalPages}`,
+          pageWidth - margin,
+          pageHeight - 22,
+          { align: "right" },
+        );
       }
 
       const safeDomain = result.url.toLowerCase().replace(/[^a-z0-9.-]/g, "-");
       const date = new Date(result.scannedAt).toISOString().slice(0, 10);
       const filename = `secscan-${safeDomain}-${date}.pdf`;
-      if (saveToCloud) {
-        const form = new FormData();
-        form.set("scanId", result.id);
-        form.set("file", pdf.output("blob"), filename);
-        const response = await fetch("/api/reports", { method: "POST", body: form });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error ?? "Could not save report.");
-        setStoredReportUrl(data.url as string);
-        setStorageMessage("Saved to your private Neon Storage bucket.");
-      } else {
-        pdf.save(filename);
-      }
+      pdf.save(filename);
     } catch (error) {
-      setStorageMessage(error instanceof Error ? error.message : "Could not save the report.");
+      console.error(error);
     } finally {
       setIsExporting(false);
     }
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-    <button
-      type="button"
-      onClick={() => exportPdf()}
-      disabled={isExporting}
-      className="min-h-10 shrink-0 rounded-lg border border-violet-400/30 px-3 py-2 text-xs font-medium text-violet-200 transition-colors hover:bg-violet-500/15 disabled:cursor-wait disabled:opacity-60 sm:text-sm"
-    >
-      {isExporting ? "Preparing PDF..." : "Download PDF"}
-    </button>
-    <span className="inline-flex items-center gap-2">
-      <button type="button" onClick={() => exportPdf(true)} disabled={isExporting} className="min-h-10 shrink-0 rounded-lg border border-violet-400/30 px-3 py-2 text-xs font-medium text-violet-200 transition-colors hover:bg-violet-500/15 disabled:cursor-wait disabled:opacity-60 sm:text-sm">
-        {isExporting ? "Saving…" : "Save to Neon"}
+      <button
+        type="button"
+        onClick={() => exportPdf()}
+        disabled={isExporting}
+        className="min-h-10 shrink-0 rounded-lg border border-violet-400/30 px-3 py-2 text-xs font-medium text-violet-200 transition-colors hover:bg-violet-500/15 disabled:cursor-wait disabled:opacity-60 sm:text-sm"
+      >
+        {isExporting ? "Preparing PDF..." : "Download PDF"}
       </button>
-      {storedReportUrl && <Link className="text-xs text-violet-200 underline" href={storedReportUrl}>Open saved report</Link>}
-      {storageMessage && <span role="status" className="max-w-52 text-xs text-slate-300">{storageMessage}</span>}
-    </span>
-    </div>
   );
 }

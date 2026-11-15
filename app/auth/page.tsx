@@ -16,6 +16,77 @@ export default function AuthPage() {
   const [sessionLoading, setSessionLoading] = useState(true);
   const googlePopup = useRef<Window | null>(null);
   const googlePopupWatch = useRef<number | null>(null);
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [resetStep, setResetStep] = useState<"email" | "code" | "password">(
+    "email",
+  );
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetOtp, setResetOtp] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [resetMessage, setResetMessage] = useState("");
+
+  const forgotPassword = () => {
+    setResetEmail(email);
+    setResetStep("email");
+    setResetOtp("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setResetMessage("");
+    setForgotOpen(true);
+  };
+
+  const sendResetCode = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setPending(true);
+    setResetMessage("");
+
+    try {
+      const result = await authClient.emailOtp.requestPasswordReset({
+        email: resetEmail,
+      });
+      if (result.error) throw new Error(result.error.message);
+      setResetStep("password");
+      setResetMessage(
+        "If an account related to this email exists, a code was sent",
+      );
+    } catch (error) {
+      setResetMessage(
+        error instanceof Error ? error.message : "Couldn't send the code",
+      );
+    } finally {
+      setPending(false);
+    }
+  };
+
+  const submitNewPassword = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (newPassword !== confirmPassword) {
+      setResetMessage("The password do not match.");
+      return;
+    }
+    setPending(true);
+    setResetMessage("");
+
+    try {
+      const result = await authClient.emailOtp.resetPassword({
+        email: resetEmail,
+        otp: resetOtp,
+        password: newPassword,
+      });
+      if (result.error) throw new Error(result.error.message);
+      setForgotOpen(false);
+      setPassword(" ");
+      setMessage("Password updated successfully.");
+    } catch (error) {
+      setResetMessage(
+        error instanceof Error ? error.message : "Could not reset password",
+      );
+    } finally {
+      setPending(false);
+    }
+  };
 
   useEffect(() => {
     let active = true;
@@ -117,9 +188,7 @@ export default function AuthPage() {
             return;
           }
         }
-      } catch {
-        // The callback may close before its session cookie is visible here.
-      }
+      } catch {}
       await new Promise((resolve) => window.setTimeout(resolve, 500));
     }
     setMessage("The sign-in window closed before sign-in finished.");
@@ -179,8 +248,8 @@ export default function AuthPage() {
   return (
     <main className="mx-auto flex min-h-full w-full max-w-5xl flex-col px-4 py-9 my-8 drop-shadow-lg drop-shadow-violet-500/20  shadow-[0_0_500px_5px_rgba(168,85,247,0.04)] text-white sm:px-6 sm:py-14">
       <header className="mx-auto mb-8 w-full max-w-2xl text-center sm:mb-10">
-        <h1 className="text-2xl font-bold tracking-tight sm:text-5xl">
-          {userEmail ? "Profile" : "Sign in to SecScan"}
+        <h1 className="text-xl font-bold tracking-tight sm:text-4xl">
+          {userEmail ? "Profile details" : "Sign in to SecScan"}
         </h1>
         <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-slate-400 sm:text-base">
           {!userEmail &&
@@ -206,40 +275,39 @@ export default function AuthPage() {
             </p>
           ) : userEmail ? (
             <>
-              <div className="flex flex-col items-center text-center">
-                <div className="flex items-center justify-between gap-4">
+              <div className="flex flex-col  text-center shadow-[0_0_500px_5px_rgba(168,85,247,0.04)] p-10">
+                <div className="flex items-center gap-4">
                   <div className="flex size-16 items-center justify-center rounded-full bg-violet-400/10 text-2xl font-semibold text-violet-200 sm:size-14">
                     {(userName || userEmail).trim().charAt(0).toUpperCase()}
                   </div>
                   <h2 className=" max-w-full wrap-break-word text-xl font-semibold text-white sm:text-4xl">
                     {userName || userEmail.split("@")[0]}
                   </h2>
-                  <p className="inline-flex items-center gap-2 text-xs text-slate-500 sm:mx-5 sm:text-lg">
+                </div>
+                <div className="flex gap-1 mt-5">
+                  <p className="flex items-center gap-2 text-xs text-slate-500 sm:mx-5 sm:text-lg">
                     <span className="size-1.5 rounded-full bg-emerald-400" />
-                    Signed in
+                    Signed in with {userEmail}
                   </p>
                 </div>
-
-                <p className="mt-3 max-w-full break-all text-sm text-slate-400 sm:text-base">
-                  {userEmail}
-                </p>
+                <div className="mt-6 flex flex-col items-center justify-center gap-4">
+                  <div className="mt-8 flex items-center justify-center border-2 rounded-lg bg-slate-900/20 border-slate-800 w-full">
+                    <Link
+                      href="/history"
+                      className="flex min-h-14 items-center sm:text-xl justify-between gap-4 px-1 text-sm text-slate-300 transition-colors hover:text-white"
+                    >
+                      <span>Scan History</span>
+                    </Link>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={signOut}
+                    className="mx-auto mt-6 flex cursor-pointer min-h-10 items-center justify-center px-4 text-sm sm:text-xl text-red-400  transition-colors hover:text-slate-200"
+                  >
+                    Sign out
+                  </button>
+                </div>
               </div>
-
-              <div className="mt-8 flex items-center justify-center divide-y divide-slate-800 border-y border-slate-800 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
-                <Link
-                  href="/history"
-                  className="flex min-h-14 items-center sm:text-xl justify-between gap-4 px-1 text-sm text-slate-300 transition-colors hover:text-white"
-                >
-                  <span>Scan History</span>
-                </Link>
-              </div>
-              <button
-                type="button"
-                onClick={signOut}
-                className="mx-auto mt-6 flex cursor-pointer min-h-10 items-center justify-center px-4 text-sm sm:text-xl text-slate-500 underline decoration-slate-700 underline-offset-4 transition-colors hover:text-slate-200"
-              >
-                Sign out
-              </button>
             </>
           ) : (
             <>
@@ -324,6 +392,15 @@ export default function AuthPage() {
                     className="min-h-11 w-full rounded-md border-b border-slate-700 px-3 text-white outline-none transition-colors focus:border-violet-400"
                   />
                 </label>
+                {mode === "sign-in" && (
+                  <button
+                    type="button"
+                    onClick={forgotPassword}
+                    className="min-h-10 self-end px-1 text-sm text-violet-300 transition-colors hover:text-violet-200"
+                  >
+                    Forgot password?
+                  </button>
+                )}
                 <button
                   disabled={pending}
                   className="mt-1 min-h-11 rounded-lg bg-violet-500 px-4 text-sm font-semibold text-white transition-colors hover:bg-violet-400 disabled:cursor-wait disabled:opacity-60"
@@ -353,14 +430,141 @@ export default function AuthPage() {
         </section>
       </div>
 
-      <div className="mt-8 text-center text-sm">
-        <Link
-          href="/"
-          className="text-slate-500 underline sm:text-xl sm:my-10 decoration-slate-700 underline-offset-4 transition-colors hover:text-slate-200"
+      {!userEmail && forgotOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center  bg-black/70 pt-10"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !pending) {
+              setForgotOpen(false);
+            }
+          }}
         >
-          Back to scanner
-        </Link>
-      </div>
+          <section className="animate-result-in w-full max-w-md rounded-xl border border-slate-700 bg-slate-950 p-6 text-white shadow-xl">
+            <div className="mb-5 flex items-center justify-between">
+              <h2 id="forgot-password-title" className="text-xl font-semibold">
+                Reset your password
+              </h2>
+              <button
+                type="button"
+                onClick={() => setForgotOpen(false)}
+                disabled={pending}
+                aria-label="Close"
+                className="text-slate-400 hover:text-white disabled:opacity-50"
+              >
+                ✕
+              </button>
+            </div>
+
+            {resetStep === "email" ? (
+              <form onSubmit={sendResetCode} className="flex flex-col gap-4">
+                <p className="text-sm text-slate-400">
+                  Enter your account email and we’ll send you a reset code.
+                </p>
+
+                <label className="flex flex-col gap-1.5 text-sm text-slate-300">
+                  Email
+                  <input
+                    type="email"
+                    value={resetEmail}
+                    onChange={(event) => setResetEmail(event.target.value)}
+                    required
+                    autoComplete="email"
+                    className="min-h-11 rounded-md border border-slate-700 bg-slate-900 px-3 outline-none focus:border-violet-400"
+                  />
+                </label>
+
+                <button
+                  disabled={pending}
+                  className="min-h-11 rounded-lg bg-violet-500 px-4 font-semibold disabled:opacity-60"
+                >
+                  {pending ? "Sending…" : "Send code"}
+                </button>
+              </form>
+            ) : (
+              <form
+                onSubmit={submitNewPassword}
+                className="flex flex-col gap-4"
+              >
+                <p className="text-sm text-slate-400">
+                  Enter the code sent to <strong>{resetEmail}</strong>, then
+                  choose a new password.
+                </p>
+
+                <label className="flex flex-col gap-1.5 text-sm text-slate-300">
+                  Email code
+                  <input
+                    value={resetOtp}
+                    onChange={(event) => setResetOtp(event.target.value)}
+                    required
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    className="min-h-11 rounded-md border border-slate-700 bg-slate-900 px-3 outline-none focus:border-violet-400"
+                  />
+                </label>
+
+                <label className="flex flex-col gap-1.5 text-sm text-slate-300">
+                  New password
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(event) => setNewPassword(event.target.value)}
+                    required
+                    minLength={8}
+                    autoComplete="new-password"
+                    className="min-h-11 rounded-md border border-slate-700 bg-slate-900 px-3 outline-none focus:border-violet-400"
+                  />
+                </label>
+
+                <label className="flex flex-col gap-1.5 text-sm text-slate-300">
+                  Confirm new password
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(event) => setConfirmPassword(event.target.value)}
+                    required
+                    minLength={8}
+                    autoComplete="new-password"
+                    className="min-h-11 rounded-md border border-slate-700 bg-slate-900 px-3 outline-none focus:border-violet-400"
+                  />
+                </label>
+
+                <button
+                  disabled={pending}
+                  className="min-h-11 rounded-lg bg-violet-500 px-4 font-semibold disabled:opacity-60"
+                >
+                  {pending ? "Updating…" : "Reset password"}
+                </button>
+
+                <button
+                  type="button"
+                  disabled={pending}
+                  onClick={() => {
+                    setResetMessage("");
+                    void sendResetCode(
+                      new Event(
+                        "submit",
+                      ) as unknown as React.FormEvent<HTMLFormElement>,
+                    );
+                  }}
+                  className="text-sm text-violet-300 hover:text-violet-200 disabled:opacity-50"
+                >
+                  Resend code
+                </button>
+              </form>
+            )}
+
+            {resetMessage && (
+              <p
+                role="status"
+                aria-live="polite"
+                className="mt-4 text-sm text-slate-300"
+              >
+                {resetMessage}
+              </p>
+            )}
+          </section>
+        </div>
+      )}
     </main>
   );
 }
