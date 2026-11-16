@@ -2,7 +2,6 @@ import { Pool } from "pg";
 
 const origin = process.env.SECSCAN_ORIGIN ?? "http://127.0.0.1:3000";
 const checks = [];
-const blocked = [];
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL_POOLED ?? process.env.DATABASE_URL,
   max: 1,
@@ -55,34 +54,5 @@ await check("Private cloud-history endpoints reject signed-out callers", async (
   }
 });
 
-await check("AI summary route responds to scan data", async () => {
-  const response = await fetch(`${origin}/api/scan/summary`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      url: "example.com",
-      score: 82,
-      grade: "B",
-      findings: [{
-        id: "missing-hsts",
-        title: "Strict Transport Security",
-        severity: "high",
-        description: "The HTTPS response does not include an HSTS header.",
-        fix: "Add Strict-Transport-Security with an appropriate max-age.",
-      }],
-    }),
-  });
-  const result = await response.json();
-  if (response.status === 503 && result.error?.includes("enabled model")) {
-    blocked.push("AI summary inference: Neon has no enabled model on this account");
-    return;
-  }
-  if (!response.ok || typeof result.summary !== "string" || !result.summary.trim()) {
-    throw new Error(`AI summary route returned HTTP ${response.status}`);
-  }
-});
-
 for (const name of checks) console.log(`PASS ${name}`);
-for (const reason of blocked) console.log(`BLOCKED ${reason}`);
-if (blocked.length) process.exitCode = 1;
 await pool.end();

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { authClient } from "@/lib/auth/client";
+import { FaGoogle } from "react-icons/fa";
 
 export default function AuthPage() {
   const [mode, setMode] = useState<"sign-in" | "sign-up">("sign-in");
@@ -246,7 +247,7 @@ export default function AuthPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-full w-full max-w-5xl flex-col px-4 py-9 my-8 drop-shadow-lg drop-shadow-violet-500/20  shadow-[0_0_500px_5px_rgba(168,85,247,0.04)] text-white sm:px-6 sm:py-14">
+    <main className="animate-fadeInUp mx-auto flex min-h-full w-full max-w-5xl flex-col px-4 py-9 my-8 drop-shadow-lg drop-shadow-violet-500/20  shadow-[0_0_500px_5px_rgba(168,85,247,0.04)] text-white sm:px-6 sm:py-14">
       <header className="mx-auto mb-8 w-full max-w-2xl text-center sm:mb-10">
         <h1 className="text-xl font-bold tracking-tight sm:text-4xl">
           {userEmail ? "Profile details" : "Sign in to SecScan"}
@@ -342,7 +343,13 @@ export default function AuthPage() {
                 disabled={pending}
                 className="flex min-h-11 w-50% items-center mx-auto font-bold justify-center gap-2 rounded-lg px-4 text-sm font-medium text-slate-200 hover:scale-105 hover:duration-100 border-b-2 border-slate-950 disabled:cursor-wait disabled:opacity-60"
               >
-                {pending ? "Please wait…" : "Continue with Google"}
+                {pending ? (
+                  "Please wait…"
+                ) : (
+                  <>
+                    <FaGoogle /> Continue with Google
+                  </>
+                )}
               </button>
 
               <div

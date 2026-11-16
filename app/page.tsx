@@ -33,7 +33,7 @@ export default function Home() {
   }
 
   return (
-    <div className="mx-auto select-none flex min-h-full w-full max-w-7xl flex-col items-center gap-5 px-3 py-5 text-white sm:gap-7 sm:px-6 sm:py-8 lg:px-8">
+    <div className="animate-fadeInUp mx-auto select-none flex min-h-full w-full max-w-7xl flex-col items-center gap-5 px-3 py-5 text-white sm:gap-7 sm:px-6 sm:py-8 lg:px-8">
       <header className="w-full max-w-4xl px-1 text-center sm:px-10">
         <h1 className="mt-2 text-2xl font-bold italic tracking-tight sm:text-3xl lg:text-4xl">
           SecScan - Website Security Scanner

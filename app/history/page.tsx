@@ -30,7 +30,7 @@ export default function HistoryPage() {
   }
 
   return (
-    <section className="mx-auto flex min-h-full w-full max-w-4xl flex-col gap-4 px-3 py-6 text-white sm:gap-6 sm:px-6 sm:py-10">
+    <section className="animate-fadeInUp mx-auto flex min-h-full w-full max-w-4xl flex-col gap-4 px-3 py-6 text-white sm:gap-6 sm:px-6 sm:py-10">
       <CloudScanHistory />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold sm:text-3xl">Scan history</h1>

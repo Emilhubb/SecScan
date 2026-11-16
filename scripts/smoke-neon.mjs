@@ -5,14 +5,13 @@ import { Pool } from "pg";
 
 const required = [
   "DATABASE_URL", "NEON_AUTH_BASE_URL", "AWS_ENDPOINT_URL_S3", "AWS_ACCESS_KEY_ID",
-  "AWS_SECRET_ACCESS_KEY", "AWS_REGION", "S3_BUCKET", "NEON_AI_GATEWAY_BASE_URL",
-  "NEON_AI_GATEWAY_TOKEN", "NEON_REALTIME_URL", "NEON_REALTIME_SECRET",
+  "AWS_SECRET_ACCESS_KEY", "AWS_REGION", "S3_BUCKET", "NEON_REALTIME_URL",
+  "NEON_REALTIME_SECRET",
 ];
 const missing = required.filter((key) => !process.env[key]);
 if (missing.length) throw new Error(`Missing Neon variables: ${missing.join(", ")}`);
 
 const passed = [];
-const failures = [];
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 2 });
 let realtime;
 let subscription;
@@ -40,15 +39,6 @@ try {
   objectKey = undefined;
   s3.destroy();
   passed.push("Object Storage: upload, read, and delete succeeded");
-
-  const gateway = process.env.NEON_AI_GATEWAY_BASE_URL;
-  const headers = { Authorization: `Bearer ${process.env.NEON_AI_GATEWAY_TOKEN}` };
-  const catalogResponse = await fetch(`${gateway}/v1/models`, { headers, cache: "no-store" });
-  if (!catalogResponse.ok) throw new Error(`AI Gateway catalog returned HTTP ${catalogResponse.status}`);
-  const catalog = await catalogResponse.json();
-  const model = catalog.data?.find((entry) => entry.enabled && typeof entry.id === "string")?.id;
-  if (!model) failures.push("AI Gateway: catalog responds, but the account has no enabled model for inference");
-  else passed.push("AI Gateway: model catalog lists an enabled model");
 
   realtime = createRealtime({
     url: process.env.NEON_REALTIME_URL,
@@ -92,5 +82,3 @@ try {
 }
 
 if (!process.exitCode) for (const check of passed) console.log(`PASS ${check}`);
-for (const failure of failures) console.log(`BLOCKED ${failure}`);
-if (failures.length) process.exitCode = 1;

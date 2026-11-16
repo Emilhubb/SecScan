@@ -34,7 +34,7 @@ body {
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(100%);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
@@ -44,6 +44,9 @@ body {
 
 .animate-result-in {
   animation: result-in 220ms ease-out both;
+}
+.animate-fadeInUp {
+  animation: fadeInUp 300ms ease-in both;
 }
 
 @media (prefers-reduced-motion: reduce) {

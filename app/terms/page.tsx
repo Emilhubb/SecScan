@@ -11,7 +11,7 @@ const textClass = "text-sm leading-7 text-slate-300 sm:text-base";
 
 export default function TermsPage() {
   return (
-    <article className="mx-auto flex min-h-full w-full max-w-3xl flex-col gap-7 px-4 py-8 text-white sm:px-6 sm:py-12">
+    <article className="animate-fadeInUp mx-auto flex min-h-full w-full max-w-3xl flex-col gap-7 px-4 py-8 text-white sm:px-6 sm:py-12">
       <header className="flex flex-col gap-3">
         <h1 className="text-2xl font-bold sm:text-3xl">Terms of Service</h1>
         <p className="text-sm text-slate-400 sm:text-base">

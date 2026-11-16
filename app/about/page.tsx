@@ -21,7 +21,7 @@ const scannedAreas = [
 
 export default function AboutPage() {
   return (
-    <article className="mx-auto flex min-h-full w-full max-w-3xl flex-col gap-6 px-4 py-8 text-white sm:px-6 sm:py-12">
+    <article className="animate-fadeInUp mx-auto flex min-h-full w-full max-w-3xl flex-col gap-6 px-4 py-8 text-white sm:px-6 sm:py-12">
       <header className="flex flex-col gap-3">
         <h1 className="text-2xl font-bold sm:text-3xl">About SecScan</h1>
         <p className="text-sm leading-7 text-slate-300 sm:text-base">
